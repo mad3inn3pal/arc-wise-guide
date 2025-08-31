@@ -73,6 +73,7 @@ const Demo = () => {
   const { toast } = useToast();
 
   useEffect(() => {
+    console.log("Demo component mounted, loading data...");
     // Simulate API calls with mock data
     const fetchData = async () => {
       try {
@@ -93,6 +94,7 @@ const Demo = () => {
         
         setChecklist(mockChecklist);
         setLetter(mockLetter);
+        console.log("Demo data loaded successfully", { checklist: mockChecklist, letter: mockLetter });
       } catch (err) {
         setError("Failed to load compliance data");
         toast({

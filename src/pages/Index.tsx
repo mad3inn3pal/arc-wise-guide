@@ -33,13 +33,20 @@ const Index = () => {
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button asChild size="lg" className="bg-primary hover:bg-primary/90 text-lg px-8 py-3">
                 <Link to="/demo">
-                  View Demo
+                  🚀 View Live Demo
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>
               </Button>
               <Button variant="outline" size="lg" className="text-lg px-8 py-3">
                 Learn More
               </Button>
+            </div>
+            
+            {/* Quick Navigation Helper */}
+            <div className="mt-8 p-4 bg-info-light rounded-lg border border-info/20">
+              <p className="text-info-foreground text-sm">
+                <strong>Quick Start:</strong> Click "View Live Demo" above or navigate to <code className="bg-info/20 px-2 py-1 rounded text-xs">/demo</code> to see the ARC compliance assessment in action.
+              </p>
             </div>
           </div>
         </div>
