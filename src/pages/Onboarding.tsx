@@ -6,10 +6,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useToast } from '@/hooks/use-toast';
 import { Progress } from '@/components/ui/progress';
 import { User, Session } from '@supabase/supabase-js';
-import { Building2, MapPin, Users, Upload } from 'lucide-react';
+import { Building2, User as UserIcon, CreditCard, Check } from 'lucide-react';
 
 const US_STATES = [
   'AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA',
@@ -19,14 +20,40 @@ const US_STATES = [
   'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY'
 ];
 
-const TIMEZONES = [
-  'America/New_York',
-  'America/Chicago', 
-  'America/Denver',
-  'America/Los_Angeles',
-  'America/Phoenix',
-  'America/Anchorage',
-  'Pacific/Honolulu'
+const PLANS = [
+  {
+    id: 'free',
+    name: 'Free',
+    price: '$0',
+    period: '/month',
+    submissions: 4,
+    features: ['4 submissions per month', 'Basic compliance checking', 'Email support']
+  },
+  {
+    id: 'starter',
+    name: 'Starter',
+    price: '$29',
+    period: '/month',
+    submissions: 60,
+    features: ['60 submissions per month', 'AI-powered compliance', 'Priority support', 'Document templates'],
+    popular: true
+  },
+  {
+    id: 'growth',
+    name: 'Growth',
+    price: '$99',
+    period: '/month',
+    submissions: 240,
+    features: ['240 submissions per month', 'OCR document processing', 'Meeting management', 'API access', 'Custom workflows']
+  },
+  {
+    id: 'pro',
+    name: 'Professional',
+    price: '$299',
+    period: '/month',
+    submissions: 600,
+    features: ['600 submissions per month', 'All Growth features', 'SSO integration', 'White-label options', 'Dedicated support']
+  }
 ];
 
 interface OnboardingProps {}
@@ -44,11 +71,13 @@ const Onboarding: React.FC<OnboardingProps> = () => {
   const [orgName, setOrgName] = useState('');
   const [orgId, setOrgId] = useState<string | null>(null);
   
-  // Step 2: Community
-  const [communityName, setCommunityName] = useState('');
-  const [state, setState] = useState('');
-  const [timezone, setTimezone] = useState('');
-  const [meetingMode, setMeetingMode] = useState('meeting');
+  // Step 2: Contact Information
+  const [contactName, setContactName] = useState('');
+  const [address, setAddress] = useState('');
+  const [phone, setPhone] = useState('');
+  
+  // Step 3: Plan Selection
+  const [selectedPlan, setSelectedPlan] = useState('free');
 
   useEffect(() => {
     const getSession = async () => {
@@ -90,7 +119,10 @@ const Onboarding: React.FC<OnboardingProps> = () => {
     setIsLoading(true);
     
     try {
-      const response = await fetch('http://localhost:4000/api/onboarding/org', {
+      // Try to use environment variable or fallback to localhost
+      const apiUrl = import.meta.env.VITE_API_BASE || 'http://localhost:4000';
+      
+      const response = await fetch(`${apiUrl}/api/onboarding/org`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -100,8 +132,12 @@ const Onboarding: React.FC<OnboardingProps> = () => {
       });
       
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to create organization');
+        // Handle different error types
+        if (response.status === 0 || !response.status) {
+          throw new Error('Cannot connect to server. Please make sure the backend is running on port 4000.');
+        }
+        const error = await response.json().catch(() => ({ error: 'Server error' }));
+        throw new Error(error.error || `Server returned ${response.status}`);
       }
       
       const data = await response.json();
@@ -123,9 +159,10 @@ const Onboarding: React.FC<OnboardingProps> = () => {
       
       setCurrentStep(2);
     } catch (error: any) {
+      console.error('Organization creation error:', error);
       toast({
         title: "Error",
-        description: error.message,
+        description: error.message || 'Failed to create organization',
         variant: "destructive",
       });
     } finally {
@@ -133,36 +170,29 @@ const Onboarding: React.FC<OnboardingProps> = () => {
     }
   };
 
-  const handleCreateCommunity = async (e: React.FormEvent) => {
+  const handleContactInfo = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!communityName.trim() || !state || !timezone) return;
+    if (!contactName.trim() || !address.trim() || !phone.trim()) return;
     
     setIsLoading(true);
     
     try {
-      const response = await fetch('http://localhost:4000/api/onboarding/community', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session?.access_token}`,
-          'x-dev-org': orgId || ''
-        },
-        body: JSON.stringify({
-          name: communityName,
-          state,
-          timezone,
-          meeting_mode: meetingMode
-        })
+      // Update user profile with contact information
+      const { error: updateError } = await supabase.auth.updateUser({
+        data: { 
+          contact_name: contactName,
+          address: address,
+          phone: phone
+        }
       });
       
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to create community');
+      if (updateError) {
+        throw new Error('Failed to save contact information');
       }
       
       toast({
-        title: "Community created",
-        description: `${communityName} is ready to go!`,
+        title: "Contact information saved",
+        description: "Moving to plan selection...",
       });
       
       setCurrentStep(3);
@@ -177,23 +207,50 @@ const Onboarding: React.FC<OnboardingProps> = () => {
     }
   };
 
-  const handleSkipInvites = () => {
-    setCurrentStep(4);
-  };
-
-  const handleCompleteOnboarding = () => {
-    toast({
-      title: "Setup complete",
-      description: "Welcome to ARC Copilot! You can start uploading documents and creating submissions.",
-    });
-    navigate('/app');
+  const handlePlanSelection = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    setIsLoading(true);
+    
+    try {
+      // Update plan selection (this would normally involve payment processing)
+      const selectedPlanData = PLANS.find(p => p.id === selectedPlan);
+      
+      toast({
+        title: "Plan selected",
+        description: `You've selected the ${selectedPlanData?.name} plan. Welcome to ARC Copilot!`,
+      });
+      
+      // Update user metadata to mark onboarding as complete
+      const { error: updateError } = await supabase.auth.updateUser({
+        data: { 
+          selected_plan: selectedPlan,
+          onboarding_completed: true
+        }
+      });
+      
+      if (updateError) {
+        console.error('Failed to update plan selection:', updateError);
+      }
+      
+      // Navigate to app dashboard
+      navigate('/app');
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   if (!user) {
     return <div>Loading...</div>;
   }
 
-  const progress = (currentStep / 4) * 100;
+  const progress = (currentStep / 3) * 100;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/20 p-4">
@@ -205,7 +262,7 @@ const Onboarding: React.FC<OnboardingProps> = () => {
         
         <div className="space-y-4">
           <div className="flex justify-between text-sm text-muted-foreground">
-            <span>Step {currentStep} of 4</span>
+            <span>Step {currentStep} of 3</span>
             <span>{Math.round(progress)}% complete</span>
           </div>
           <Progress value={progress} className="h-2" />
@@ -249,63 +306,56 @@ const Onboarding: React.FC<OnboardingProps> = () => {
           <Card>
             <CardHeader>
               <div className="flex items-center gap-3">
-                <MapPin className="h-6 w-6 text-primary" />
+                <UserIcon className="h-6 w-6 text-primary" />
                 <div>
-                  <CardTitle>Add Your First Community</CardTitle>
+                  <CardTitle>Contact Information</CardTitle>
                   <CardDescription>
-                    Communities help organize submissions by location and governing rules
+                    Please provide your contact details
                   </CardDescription>
                 </div>
               </div>
             </CardHeader>
-            <form onSubmit={handleCreateCommunity}>
+            <form onSubmit={handleContactInfo}>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="communityName">Community Name</Label>
+                  <Label htmlFor="contactName">Full Name</Label>
                   <Input
-                    id="communityName"
-                    placeholder="e.g., Phase 1, Main HOA"
-                    value={communityName}
-                    onChange={(e) => setCommunityName(e.target.value)}
+                    id="contactName"
+                    placeholder="Enter your full name"
+                    value={contactName}
+                    onChange={(e) => setContactName(e.target.value)}
+                    required
+                    disabled={isLoading}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="address">Address</Label>
+                  <Input
+                    id="address"
+                    placeholder="Enter your address"
+                    value={address}
+                    onChange={(e) => setAddress(e.target.value)}
+                    required
+                    disabled={isLoading}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="phone">Phone Number</Label>
+                  <Input
+                    id="phone"
+                    type="tel"
+                    placeholder="Enter your phone number"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
                     required
                     disabled={isLoading}
                   />
                 </div>
                 
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="state">State</Label>
-                    <Select value={state} onValueChange={setState} disabled={isLoading}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select state" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {US_STATES.map(st => (
-                          <SelectItem key={st} value={st}>{st}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="timezone">Timezone</Label>
-                    <Select value={timezone} onValueChange={setTimezone} disabled={isLoading}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select timezone" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {TIMEZONES.map(tz => (
-                          <SelectItem key={tz} value={tz}>
-                            {tz.split('/')[1].replace('_', ' ')}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                
-                <Button type="submit" className="w-full" disabled={isLoading || !communityName.trim() || !state || !timezone}>
-                  {isLoading ? "Creating..." : "Create Community"}
+                <Button type="submit" className="w-full" disabled={isLoading || !contactName.trim() || !address.trim() || !phone.trim()}>
+                  {isLoading ? "Saving..." : "Continue"}
                 </Button>
               </CardContent>
             </form>
@@ -316,58 +366,67 @@ const Onboarding: React.FC<OnboardingProps> = () => {
           <Card>
             <CardHeader>
               <div className="flex items-center gap-3">
-                <Users className="h-6 w-6 text-primary" />
+                <CreditCard className="h-6 w-6 text-primary" />
                 <div>
-                  <CardTitle>Invite Team Members (Optional)</CardTitle>
+                  <CardTitle>Choose Your Plan</CardTitle>
                   <CardDescription>
-                    Add board members, property managers, or other stakeholders
+                    Select the plan that best fits your needs
                   </CardDescription>
                 </div>
               </div>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="text-center py-8 text-muted-foreground">
-                <p>Team invitations will be available in the full version.</p>
-                <p className="text-sm mt-2">You can add team members later from the settings.</p>
-              </div>
-              <div className="flex gap-3">
-                <Button variant="outline" onClick={handleSkipInvites} className="flex-1">
-                  Skip for Now
+            <form onSubmit={handlePlanSelection}>
+              <CardContent className="space-y-6">
+                <RadioGroup value={selectedPlan} onValueChange={setSelectedPlan}>
+                  <div className="grid gap-4">
+                    {PLANS.map((plan) => (
+                      <div key={plan.id} className="relative">
+                        <div className={`flex items-center space-x-3 p-4 border rounded-lg cursor-pointer transition-colors ${
+                          selectedPlan === plan.id ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'
+                        } ${plan.popular ? 'ring-2 ring-primary/20' : ''}`}>
+                          <RadioGroupItem value={plan.id} id={plan.id} />
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2">
+                              <Label htmlFor={plan.id} className="font-semibold cursor-pointer">
+                                {plan.name}
+                              </Label>
+                              {plan.popular && (
+                                <span className="bg-primary text-primary-foreground text-xs px-2 py-1 rounded">
+                                  Popular
+                                </span>
+                              )}
+                            </div>
+                            <div className="flex items-baseline gap-1 mt-1">
+                              <span className="text-2xl font-bold">{plan.price}</span>
+                              <span className="text-muted-foreground">{plan.period}</span>
+                            </div>
+                            <p className="text-sm text-muted-foreground mt-1">
+                              {plan.submissions} submissions per month
+                            </p>
+                            <ul className="text-xs text-muted-foreground mt-2 space-y-1">
+                              {plan.features.map((feature, idx) => (
+                                <li key={idx} className="flex items-center gap-1">
+                                  <Check className="h-3 w-3 text-primary" />
+                                  {feature}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </RadioGroup>
+                
+                <Button type="submit" className="w-full" disabled={isLoading}>
+                  {isLoading ? "Setting up..." : "Complete Setup"}
                 </Button>
-                <Button onClick={handleSkipInvites} className="flex-1">
-                  Continue
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {currentStep === 4 && (
-          <Card>
-            <CardHeader>
-              <div className="flex items-center gap-3">
-                <Upload className="h-6 w-6 text-primary" />
-                <div>
-                  <CardTitle>You're All Set!</CardTitle>
-                  <CardDescription>
-                    Your ARC Copilot workspace is ready. You can now upload governing documents and start processing submissions.
-                  </CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="bg-muted/50 p-4 rounded-lg space-y-2">
-                <h4 className="font-medium">Next Steps:</h4>
-                <ul className="text-sm text-muted-foreground space-y-1">
-                  <li>• Upload your governing documents (CC&Rs, bylaws, etc.)</li>
-                  <li>• Create your first architectural submission</li>
-                  <li>• Review automated compliance checks</li>
-                </ul>
-              </div>
-              <Button onClick={handleCompleteOnboarding} className="w-full">
-                Enter ARC Copilot
-              </Button>
-            </CardContent>
+                
+                <p className="text-xs text-muted-foreground text-center">
+                  You can change your plan anytime from your dashboard settings.
+                </p>
+              </CardContent>
+            </form>
           </Card>
         )}
       </div>
