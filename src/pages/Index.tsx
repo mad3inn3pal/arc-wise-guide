@@ -202,6 +202,60 @@ const Index = () => {
         </div>
       </section>
 
+      {/* Trust Section */}
+      <section className="py-20 bg-muted/30">
+        <div className="container mx-auto px-6">
+          <div className="max-w-4xl mx-auto">
+            <h2 className="text-3xl font-bold text-center mb-4">Built for Accountability</h2>
+            <p className="text-center text-muted-foreground mb-12 text-lg">Without legalese</p>
+            
+            <div className="grid md:grid-cols-3 gap-8">
+              <Card className="text-center shadow-card hover:shadow-elevated transition-smooth bg-gradient-card">
+                <CardContent className="pt-8 pb-8">
+                  <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <Users className="h-8 w-8 text-primary" />
+                  </div>
+                  <h3 className="font-semibold mb-3 text-lg">Human Oversight, Always</h3>
+                  <p className="text-muted-foreground text-sm">
+                    Every letter is a draft for human review. We don't provide legal advice.
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card className="text-center shadow-card hover:shadow-elevated transition-smooth bg-gradient-card">
+                <CardContent className="pt-8 pb-8">
+                  <div className="w-16 h-16 bg-success/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <ArrowRight className="h-8 w-8 text-success" />
+                  </div>
+                  <h3 className="font-semibold mb-3 text-lg">Data Portability</h3>
+                  <p className="text-muted-foreground text-sm">
+                    You can request an export of your data (JSON/CSV + PDFs). No lock-in.
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card className="text-center shadow-card hover:shadow-elevated transition-smooth bg-gradient-card">
+                <CardContent className="pt-8 pb-8">
+                  <div className="w-16 h-16 bg-info/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <CheckCircle className="h-8 w-8 text-info" />
+                  </div>
+                  <h3 className="font-semibold mb-3 text-lg">Transparent Operations</h3>
+                  <p className="text-muted-foreground text-sm">
+                    We publish uptime and change logs. No credits, refunds, or SLAs.
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+
+            <div className="mt-12 p-6 bg-muted/50 rounded-2xl border border-border">
+              <p className="text-center text-sm text-muted-foreground">
+                <strong>Note:</strong> ARC Copilot is decision support software. Outputs are drafts for human approval. No warranties or service credits are offered.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* CTA Section */}
       <section className="py-20">
         <div className="container mx-auto px-6">

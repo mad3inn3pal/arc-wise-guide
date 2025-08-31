@@ -373,6 +373,51 @@ const Pricing = () => {
         </div>
       </section>
 
+      {/* Service Terms */}
+      <section className="py-16 bg-muted/30">
+        <div className="container mx-auto px-6">
+          <div className="max-w-4xl mx-auto">
+            <h3 className="text-2xl font-bold text-center mb-8">Service Terms (Summary)</h3>
+            <Card className="shadow-card">
+              <CardContent className="pt-6">
+                <div className="space-y-4 text-sm text-muted-foreground">
+                  <div className="flex items-start gap-3">
+                    <div className="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0"></div>
+                    <p>
+                      <strong className="text-foreground">Non-binding SLOs only.</strong> We operate with commercially reasonable efforts and publish a public status page.
+                    </p>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0"></div>
+                    <p>
+                      <strong className="text-foreground">No SLAs, penalties, or service credits</strong> are offered on any plan.
+                    </p>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0"></div>
+                    <p>
+                      <strong className="text-foreground">Exports available on request.</strong> We retain audit logs per records policy; other data follows your retention settings.
+                    </p>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0"></div>
+                    <p>
+                      <strong className="text-foreground">Pass-through fees</strong> (e-sign, SMS) are billed at cost + a small margin.
+                    </p>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0"></div>
+                    <p>
+                      <strong className="text-foreground">The service provides draft outputs</strong> for human review; it does not provide legal advice.
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
+
       {/* CTA */}
       <section className="py-20">
         <div className="container mx-auto px-6">
