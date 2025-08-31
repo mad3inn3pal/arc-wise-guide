@@ -1,0 +1,318 @@
+import Navigation from "@/components/Navigation";
+import Footer from "@/components/Footer";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Check, X, ArrowRight } from "lucide-react";
+import { Link } from "react-router-dom";
+
+const Pricing = () => {
+  const plans = [
+    {
+      name: "Free",
+      price: "$0",
+      period: "",
+      submissions: "4 submissions/mo",
+      overage: "No overage (hard stop)",
+      features: [
+        "1 community",
+        "1 board seat",
+        "30-day retention",
+        "Basic rule checks",
+        "Draft letters"
+      ],
+      limitations: [
+        "No OCR",
+        "No LLM analysis",
+        "No integrations",
+        "No meeting mode"
+      ],
+      cta: "Get Started",
+      popular: false
+    },
+    {
+      name: "Starter",
+      price: "$149",
+      period: "/ community / mo",
+      submissions: "60 submissions/mo",
+      overage: "$3.00 per extra submission",
+      features: [
+        "1 community",
+        "2 board seats",
+        "Deterministic checks",
+        "Lightweight AI classification",
+        "Draft letters",
+        "Email support"
+      ],
+      limitations: [
+        "No OCR on documents",
+        "Limited storage",
+        "No meeting mode"
+      ],
+      cta: "Start Pilot",
+      popular: false
+    },
+    {
+      name: "Growth", 
+      price: "$399",
+      period: "/ community / mo",
+      submissions: "240 submissions/mo",
+      overage: "$2.00 per extra submission",
+      features: [
+        "1 community",
+        "5 board seats",
+        "OCR on governing docs",
+        "Meeting mode",
+        "Packet PDFs",
+        "Webhooks",
+        "Priority support"
+      ],
+      limitations: [],
+      cta: "Start Pilot",
+      popular: true
+    },
+    {
+      name: "Pro",
+      price: "$799",
+      period: "/ community / mo", 
+      submissions: "600 submissions/mo",
+      overage: "$1.25 per extra submission",
+      features: [
+        "1 community",
+        "Unlimited board seats",
+        "Full feature access",
+        "Higher rate limits",
+        "SSO (SAML)",
+        "Custom overlays",
+        "Advanced analytics",
+        "Dedicated support"
+      ],
+      limitations: [],
+      cta: "Start Pilot",
+      popular: false
+    }
+  ];
+
+  const addOns = [
+    {
+      name: "E-signature",
+      price: "$0.75",
+      unit: "per envelope",
+      description: "DocuSign/Dropbox Sign integration"
+    },
+    {
+      name: "SMS Notifications",
+      price: "$0.02", 
+      unit: "per message",
+      description: "Text alerts for board members"
+    },
+    {
+      name: "Extra OCR/LLM Credits",
+      price: "$99",
+      unit: "per 1,000 pages",
+      description: "For heavy scan communities"
+    },
+    {
+      name: "White-label Domain",
+      price: "$99",
+      unit: "per month",
+      description: "Custom subdomain + branding"
+    }
+  ];
+
+  return (
+    <div className="min-h-screen bg-gradient-subtle">
+      <Navigation />
+      
+      {/* Hero Section */}
+      <section className="py-20">
+        <div className="container mx-auto px-6">
+          <div className="max-w-3xl mx-auto text-center">
+            <h1 className="text-4xl font-bold mb-6">
+              Simple, Transparent Pricing
+            </h1>
+            <p className="text-xl text-muted-foreground mb-8">
+              Priced like a co-pilot, not a full HOA suite. Start with a 60-day pilot and see results.
+            </p>
+            <div className="flex items-center justify-center gap-4 mb-8">
+              <Badge variant="success" className="text-base px-4 py-2">
+                60-Day Pilot Available
+              </Badge>
+              <Badge variant="info" className="text-base px-4 py-2">
+                Cancel Anytime
+              </Badge>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Pricing Plans */}
+      <section className="py-20">
+        <div className="container mx-auto px-6">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {plans.map((plan, index) => (
+              <Card 
+                key={index} 
+                className={`relative ${plan.popular ? 'ring-2 ring-primary shadow-elevated' : 'shadow-card'} hover:shadow-elevated transition-smooth`}
+              >
+                {plan.popular && (
+                  <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                    <Badge className="bg-primary text-primary-foreground">Most Popular</Badge>
+                  </div>
+                )}
+                <CardHeader className="text-center">
+                  <CardTitle className="text-xl">{plan.name}</CardTitle>
+                  <div className="mt-4">
+                    <span className="text-3xl font-bold">{plan.price}</span>
+                    <span className="text-muted-foreground">{plan.period}</span>
+                  </div>
+                  <p className="text-sm text-muted-foreground mt-2">{plan.submissions}</p>
+                  <p className="text-xs text-muted-foreground">{plan.overage}</p>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-3">
+                    {plan.features.map((feature, idx) => (
+                      <div key={idx} className="flex items-center gap-3">
+                        <Check className="h-4 w-4 text-success flex-shrink-0" />
+                        <span className="text-sm">{feature}</span>
+                      </div>
+                    ))}
+                    {plan.limitations.map((limitation, idx) => (
+                      <div key={idx} className="flex items-center gap-3">
+                        <X className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                        <span className="text-sm text-muted-foreground">{limitation}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <Button 
+                    asChild 
+                    className={`w-full ${plan.popular ? 'bg-primary hover:bg-primary/90' : ''}`}
+                    variant={plan.popular ? "default" : "outline"}
+                  >
+                    <Link to="/demo">
+                      {plan.cta}
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </Link>
+                  </Button>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          {/* Management Company Plan */}
+          <div className="mt-12">
+            <Card className="shadow-elevated bg-gradient-primary">
+              <CardContent className="pt-8 pb-8">
+                <div className="text-center text-primary-foreground">
+                  <h3 className="text-2xl font-bold mb-4">Management Company</h3>
+                  <div className="mb-4">
+                    <span className="text-4xl font-bold">$2,499</span>
+                    <span className="text-primary-foreground/80"> / month</span>
+                  </div>
+                  <p className="mb-6 text-primary-foreground/80">
+                    Up to 25 communities • Pooled usage • Consolidated analytics • Sandbox & SLAs
+                  </p>
+                  <Button asChild size="lg" variant="secondary">
+                    <Link to="/demo">
+                      Contact Sales
+                      <ArrowRight className="ml-2 h-5 w-5" />
+                    </Link>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
+
+      {/* Add-ons */}
+      <section className="py-20 bg-muted/30">
+        <div className="container mx-auto px-6">
+          <div className="max-w-4xl mx-auto">
+            <h2 className="text-3xl font-bold text-center mb-12">Optional Add-ons</h2>
+            <div className="grid md:grid-cols-2 gap-6">
+              {addOns.map((addon, index) => (
+                <Card key={index} className="shadow-card">
+                  <CardContent className="pt-6">
+                    <div className="flex justify-between items-start mb-2">
+                      <h3 className="font-semibold">{addon.name}</h3>
+                      <div className="text-right">
+                        <span className="text-lg font-bold text-primary">{addon.price}</span>
+                        <span className="text-sm text-muted-foreground"> {addon.unit}</span>
+                      </div>
+                    </div>
+                    <p className="text-sm text-muted-foreground">{addon.description}</p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Guarantees */}
+      <section className="py-20">
+        <div className="container mx-auto px-6">
+          <div className="max-w-4xl mx-auto text-center">
+            <h2 className="text-3xl font-bold mb-8">Our Guarantees</h2>
+            <div className="grid md:grid-cols-3 gap-8">
+              <div className="text-center">
+                <div className="w-16 h-16 bg-success-light rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <Check className="h-8 w-8 text-success" />
+                </div>
+                <h3 className="font-semibold mb-2">60-Day Pilot</h3>
+                <p className="text-sm text-muted-foreground">
+                  If you don't hit ≥20% cycle-time reduction, next month free.
+                </p>
+              </div>
+              <div className="text-center">
+                <div className="w-16 h-16 bg-info-light rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <Check className="h-8 w-8 text-info" />
+                </div>
+                <h3 className="font-semibold mb-2">Human Oversight</h3>
+                <p className="text-sm text-muted-foreground">
+                  No letter sent without human approval. Not legal advice.
+                </p>
+              </div>
+              <div className="text-center">
+                <div className="w-16 h-16 bg-warning-light rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <Check className="h-8 w-8 text-warning" />
+                </div>
+                <h3 className="font-semibold mb-2">Data Export</h3>
+                <p className="text-sm text-muted-foreground">
+                  Cancel anytime. Export available on request.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section className="py-20">
+        <div className="container mx-auto px-6">
+          <Card className="max-w-2xl mx-auto text-center shadow-elevated bg-gradient-primary">
+            <CardContent className="pt-12 pb-12">
+              <h3 className="text-2xl font-bold text-primary-foreground mb-4">
+                Ready to Start Your Pilot?
+              </h3>
+              <p className="text-primary-foreground/80 mb-8">
+                See measurable results in your first 30 days. No setup fees, no long-term contracts.
+              </p>
+              <Button asChild size="lg" variant="secondary" className="text-lg px-8 py-3">
+                <Link to="/demo">
+                  Book Your Demo
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </Link>
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </section>
+
+      <Footer />
+    </div>
+  );
+};
+
+export default Pricing;

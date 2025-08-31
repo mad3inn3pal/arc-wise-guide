@@ -1,3 +1,5 @@
+import Navigation from "@/components/Navigation";
+import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -7,6 +9,7 @@ import { Link } from "react-router-dom";
 const Index = () => {
   return (
     <div className="min-h-screen bg-gradient-subtle">
+      <Navigation />
       {/* Hero Section */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-primary opacity-5"></div>
@@ -219,19 +222,7 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="border-t bg-card">
-        <div className="container mx-auto px-6 py-8">
-          <div className="text-center text-muted-foreground">
-            <p className="mb-2">
-              <strong>Important:</strong> ARC Copilot provides regulatory guidance but does not constitute legal advice.
-            </p>
-            <p className="text-sm">
-              All decisions require human review and approval. Built for HOA professionals by compliance experts.
-            </p>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 };
