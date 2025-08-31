@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import UsageMeter from "@/components/UsageMeter";
 import { Building, Menu, X, ChevronDown } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { 
@@ -116,13 +115,6 @@ const ModernNavigation = () => {
 
           {/* Right Side */}
           <div className="hidden lg:flex items-center gap-4">
-            <UsageMeter 
-              plan="Growth"
-              included={240}
-              used={45}
-              overage={0}
-              overageRate={2.00}
-            />
             <div className="flex items-center gap-3">
               <Button variant="ghost" className="text-foreground hover:text-primary">
                 Login
