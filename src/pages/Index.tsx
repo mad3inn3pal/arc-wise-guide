@@ -43,11 +43,11 @@ const Index = () => {
                   asChild 
                   size="lg" 
                   className="bg-primary hover:bg-primary/90 text-primary-foreground text-lg px-8 py-4 shadow-glow hover:shadow-glow hover:scale-105 transition-all"
-                >
-                  <Link to="/auth">
-                    Sign up
-                    <ArrowRight className="ml-2 h-5 w-5" />
-                  </Link>
+                 >
+                   <Link to="/login">
+                     Sign up
+                     <ArrowRight className="ml-2 h-5 w-5" />
+                   </Link>
                 </Button>
               </div>
             </div>
@@ -312,11 +312,11 @@ const Index = () => {
                   asChild 
                   size="lg" 
                   className="bg-primary hover:bg-primary/90 text-primary-foreground text-lg px-8 py-4 shadow-glow hover:shadow-glow hover:scale-105 transition-all"
-                >
-                  <Link to="/auth">
-                    Sign up
-                    <ArrowRight className="ml-2 h-5 w-5" />
-                  </Link>
+                 >
+                   <Link to="/login">
+                     Sign up
+                     <ArrowRight className="ml-2 h-5 w-5" />
+                   </Link>
                 </Button>
                 <Button 
                   variant="outline" 
