@@ -30,10 +30,8 @@ const Auth = () => {
 
   useEffect(() => {
     // Check if user is coming from email confirmation
-    const access_token = searchParams.get('access_token');
-    const refresh_token = searchParams.get('refresh_token');
-    
-    if (access_token && refresh_token) {
+    const step = searchParams.get('step');
+    if (step === 'complete') {
       setSignupStep('complete');
     }
 
@@ -43,9 +41,13 @@ const Auth = () => {
         setSession(session);
         setUser(session?.user ?? null);
         
-        // Only redirect if user has completed profile setup
-        if (session?.user && session?.user?.user_metadata?.profile_completed) {
-          navigate("/dashboard");
+        if (event === 'SIGNED_IN' && session?.user) {
+          // If user just signed in and hasn't completed profile, show completion form
+          if (!session.user.user_metadata?.profile_completed) {
+            setSignupStep('complete');
+          } else {
+            navigate("/dashboard");
+          }
         }
       }
     );
@@ -55,9 +57,13 @@ const Auth = () => {
       setSession(session);
       setUser(session?.user ?? null);
       
-      // Only redirect if user has completed profile setup
-      if (session?.user && session?.user?.user_metadata?.profile_completed) {
-        navigate("/dashboard");
+      if (session?.user) {
+        // If user has session but hasn't completed profile, show completion form
+        if (!session.user.user_metadata?.profile_completed) {
+          setSignupStep('complete');
+        } else {
+          navigate("/dashboard");
+        }
       }
     });
 
@@ -69,16 +75,13 @@ const Auth = () => {
     setIsLoading(true);
 
     try {
-      const redirectUrl = `${window.location.origin}/auth`;
+      const redirectUrl = `${window.location.origin}/auth?step=complete`;
       
       const { error } = await supabase.auth.signUp({
         email,
-        password: "temp-password", // Temporary password, will be set in completion step
+        password: "temporaryPassword123!", // This will be changed in the completion step
         options: {
-          emailRedirectTo: redirectUrl,
-          data: {
-            email_signup: true
-          }
+          emailRedirectTo: redirectUrl
         }
       });
 
@@ -99,8 +102,9 @@ const Auth = () => {
       } else {
         toast({
           title: "Check your email",
-          description: "We've sent you a confirmation link to complete your registration.",
+          description: "We've sent you a confirmation link to complete your registration. Please check your spam folder if you don't see it in your inbox.",
         });
+        setEmail(""); // Clear the form
       }
     } catch (error) {
       toast({
