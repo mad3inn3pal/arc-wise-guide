@@ -116,9 +116,8 @@ const ModernNavigation = () => {
           {/* Right Side */}
           <div className="hidden lg:flex items-center gap-4">
             <div className="flex items-center gap-3">
-              <Button variant="ghost" className="text-foreground hover:text-primary">
-                Login
-                <ChevronDown className="ml-2 h-4 w-4" />
+              <Button asChild variant="ghost" className="text-foreground hover:text-primary">
+                <Link to="/login">Login</Link>
               </Button>
               <Button 
                 asChild 
