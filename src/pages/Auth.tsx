@@ -42,11 +42,19 @@ const Auth = () => {
         setUser(session?.user ?? null);
         
         if (event === 'SIGNED_IN' && session?.user) {
-          // If user just signed in and hasn't completed profile, show completion form
+          // Check if user has completed the full onboarding process
+          const hasCompletedOnboarding = session.user.user_metadata?.onboarding_completed;
+          const hasOrgId = session.user.user_metadata?.org_id;
+          
           if (!session.user.user_metadata?.profile_completed) {
+            // User needs to complete initial profile
             setSignupStep('complete');
+          } else if (!hasCompletedOnboarding || !hasOrgId) {
+            // User completed profile but not full onboarding (org creation)
+            navigate("/app/onboarding");
           } else {
-            navigate("/dashboard");
+            // User is fully set up, go to dashboard
+            navigate("/app");
           }
         }
       }
@@ -58,11 +66,19 @@ const Auth = () => {
       setUser(session?.user ?? null);
       
       if (session?.user) {
-        // If user has session but hasn't completed profile, show completion form
+        // Check if user has completed the full onboarding process
+        const hasCompletedOnboarding = session.user.user_metadata?.onboarding_completed;
+        const hasOrgId = session.user.user_metadata?.org_id;
+        
         if (!session.user.user_metadata?.profile_completed) {
+          // User needs to complete initial profile
           setSignupStep('complete');
+        } else if (!hasCompletedOnboarding || !hasOrgId) {
+          // User completed profile but not full onboarding (org creation)
+          navigate("/app/onboarding");
         } else {
-          navigate("/dashboard");
+          // User is fully set up, go to dashboard
+          navigate("/app");
         }
       }
     });
@@ -161,10 +177,10 @@ const Auth = () => {
         });
       } else {
         toast({
-          title: "Welcome!",
-          description: "Your account has been created successfully.",
+          title: "Profile completed!",
+          description: "Now let's set up your organization.",
         });
-        navigate("/dashboard");
+        navigate("/app/onboarding");
       }
     } catch (error) {
       toast({

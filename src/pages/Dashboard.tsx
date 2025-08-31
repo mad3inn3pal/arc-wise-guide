@@ -91,68 +91,90 @@ const Dashboard = () => {
 
   useEffect(() => {
     if (user) {
+      // Check if user has completed onboarding before loading data
+      const hasCompletedOnboarding = user.user_metadata?.onboarding_completed;
+      const hasOrgId = user.user_metadata?.org_id;
+      
+      if (!hasCompletedOnboarding || !hasOrgId) {
+        // User hasn't completed onboarding, redirect them
+        navigate("/app/onboarding");
+        return;
+      }
+      
       loadDashboardData();
     }
-  }, [user]);
+  }, [user, navigate]);
 
   const loadDashboardData = async () => {
     try {
-      // Check if org has any submissions or documents to determine if we should show onboarding
+      const orgId = user?.user_metadata?.org_id;
+      
+      if (!orgId) {
+        console.error('No org_id found in user metadata');
+        navigate("/app/onboarding");
+        return;
+      }
+
+      // Check if org exists and get data
       const { data: orgData } = await supabase
         .from('org')
         .select('id')
-        .eq('id', user?.user_metadata?.org_id)
+        .eq('id', orgId)
         .single();
 
-      if (orgData) {
-        const { data: submissionsData } = await supabase
-          .from('submission')
-          .select('*')
-          .eq('org_id', orgData.id)
-          .limit(1);
+      if (!orgData) {
+        console.error('Organization not found');
+        navigate("/app/onboarding");
+        return;
+      }
 
-        const { data: documentsData } = await supabase
-          .from('governing_document')
-          .select('*')
-          .eq('org_id', orgData.id)
-          .limit(1);
+      const { data: submissionsData } = await supabase
+        .from('submission')
+        .select('*')
+        .eq('org_id', orgId)
+        .limit(1);
 
-        // Show dashboard if they have submissions or documents
-        const hasAnyData = (submissionsData && submissionsData.length > 0) || 
-                          (documentsData && documentsData.length > 0);
-        
-        setHasData(hasAnyData);
+      const { data: documentsData } = await supabase
+        .from('governing_document')
+        .select('*')
+        .eq('org_id', orgId)
+        .limit(1);
 
-        if (hasAnyData) {
-          // Load mock data for demonstration
-          setKpiData({
-            medianCycleDays: 5.2,
-            p95CycleDays: 14.0,
-            requestsThisWeek: 23,
-            overdue: 7,
-            needsInfoRate: 0.31,
-            outcomes: { pass: 12, fail: 5, needsInfo: 9 }
-          });
+      // Show dashboard if they have submissions or documents
+      const hasAnyData = (submissionsData && submissionsData.length > 0) || 
+                        (documentsData && documentsData.length > 0);
+      
+      setHasData(hasAnyData);
 
-          // Load sample submissions
-          setSubmissions([
-            {
-              id: "sub_1234567890abcdef",
-              submittedAt: "2024-12-30T10:30:00Z",
-              community: { id: "comm_123", name: "Palmera Ridge", state: "TX" },
-              property: { lot: "23", address: "114 Mockingbird Ln" },
-              projectType: "Fence",
-              lastChecklist: {
-                result: "needs-info",
-                rationale: "Fence height exceeds maximum allowed in CC&Rs section 4.3(b)",
-                clauseSection: "§4.3(b)"
-              },
-              sla: { dueAt: "2024-01-05T17:00:00Z", status: "due-soon", deltaHours: -36 },
-              flags: { accommodation: false, jurisdiction: "ok" },
-              ownerEmail: "homeowner@example.com"
-            }
-          ]);
-        }
+      if (hasAnyData) {
+        // Load mock data for demonstration
+        setKpiData({
+          medianCycleDays: 5.2,
+          p95CycleDays: 14.0,
+          requestsThisWeek: 23,
+          overdue: 7,
+          needsInfoRate: 0.31,
+          outcomes: { pass: 12, fail: 5, needsInfo: 9 }
+        });
+
+        // Load sample submissions
+        setSubmissions([
+          {
+            id: "sub_1234567890abcdef",
+            submittedAt: "2024-12-30T10:30:00Z",
+            community: { id: "comm_123", name: "Palmera Ridge", state: "TX" },
+            property: { lot: "23", address: "114 Mockingbird Ln" },
+            projectType: "Fence",
+            lastChecklist: {
+              result: "needs-info",
+              rationale: "Fence height exceeds maximum allowed in CC&Rs section 4.3(b)",
+              clauseSection: "§4.3(b)"
+            },
+            sla: { dueAt: "2024-01-05T17:00:00Z", status: "due-soon", deltaHours: -36 },
+            flags: { accommodation: false, jurisdiction: "ok" },
+            ownerEmail: "homeowner@example.com"
+          }
+        ]);
       }
     } catch (error) {
       console.error('Error loading dashboard data:', error);
