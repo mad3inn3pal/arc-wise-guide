@@ -125,7 +125,7 @@ const ModernNavigation = () => {
                 size="lg" 
                 className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-6 py-2 shadow-glow hover:shadow-glow hover:scale-105 transition-all"
               >
-                <Link to="/auth">Sign up</Link>
+                <Link to="/login">Sign up</Link>
               </Button>
             </div>
           </div>
@@ -182,7 +182,7 @@ const ModernNavigation = () => {
                   asChild 
                   className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
                 >
-                  <Link to="/auth" onClick={() => setMobileMenuOpen(false)}>
+                  <Link to="/login" onClick={() => setMobileMenuOpen(false)}>
                     Sign up
                   </Link>
                 </Button>

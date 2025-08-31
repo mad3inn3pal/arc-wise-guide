@@ -144,6 +144,7 @@ const Login = () => {
                       onChange={(e) => setSignInEmail(e.target.value)}
                       required
                       disabled={isSignInLoading}
+                      className="bg-background border-input text-foreground placeholder:text-muted-foreground"
                     />
                   </div>
                   
@@ -158,6 +159,7 @@ const Login = () => {
                         onChange={(e) => setSignInPassword(e.target.value)}
                         required
                         disabled={isSignInLoading}
+                        className="bg-background border-input text-foreground placeholder:text-muted-foreground"
                       />
                       <Button
                         type="button"
@@ -207,6 +209,7 @@ const Login = () => {
                       onChange={(e) => setSignUpEmail(e.target.value)}
                       required
                       disabled={isSignUpLoading}
+                      className="bg-background border-input text-foreground placeholder:text-muted-foreground"
                     />
                   </div>
                   
