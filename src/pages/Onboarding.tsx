@@ -119,33 +119,20 @@ const Onboarding: React.FC<OnboardingProps> = () => {
     setIsLoading(true);
     
     try {
-      // Try to use environment variable or fallback to localhost
-      const apiUrl = import.meta.env.VITE_API_BASE || 'http://localhost:4000';
-      
-      const response = await fetch(`${apiUrl}/api/onboarding/org`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session?.access_token}`
-        },
-        body: JSON.stringify({ name: orgName })
+      // Use Supabase RPC function to create organization
+      const { data: orgId, error } = await supabase.rpc('create_org_with_member', {
+        org_name: orgName
       });
       
-      if (!response.ok) {
-        // Handle different error types
-        if (response.status === 0 || !response.status) {
-          throw new Error('Cannot connect to server. Please make sure the backend is running on port 4000.');
-        }
-        const error = await response.json().catch(() => ({ error: 'Server error' }));
-        throw new Error(error.error || `Server returned ${response.status}`);
+      if (error) {
+        throw new Error(error.message);
       }
       
-      const data = await response.json();
-      setOrgId(data.org_id);
+      setOrgId(orgId);
       
       // Update user metadata
       const { error: updateError } = await supabase.auth.updateUser({
-        data: { org_id: data.org_id }
+        data: { org_id: orgId }
       });
       
       if (updateError) {
