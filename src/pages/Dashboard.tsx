@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -62,13 +62,13 @@ const Dashboard = () => {
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
 
-  const usage = {
+  const usage = useMemo(() => ({
     plan: user?.user_metadata?.selected_plan || 'free',
     included: user?.user_metadata?.selected_plan === 'free' ? 3 : 25,
     used: 0,
     overage: 0,
     overageRate: 5.0,
-  };
+  }), [user]);
 
   useEffect(() => {
     // Set up auth state listener
@@ -117,12 +117,12 @@ const Dashboard = () => {
   // Handle auto-opening invite modal after upgrade
   useEffect(() => {
     const openParam = searchParams.get('open');
-    if (openParam === 'invites' && hasData && usage.plan !== 'free') {
+    if (openParam === 'invites' && hasData && usage?.plan && usage.plan !== 'free') {
       // Auto-open invite modal and remove query param
       navigate('/app', { replace: true });
       // TODO: Open invite modal programmatically
     }
-  }, [searchParams, hasData, usage.plan, navigate]);
+  }, [searchParams, hasData, usage, navigate]);
 
   const loadDashboardData = async () => {
     try {
