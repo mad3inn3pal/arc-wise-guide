@@ -1,57 +1,104 @@
-import Navigation from "@/components/Navigation";
+import ModernNavigation from "@/components/ModernNavigation";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Building, Shield, FileCheck, Users, ArrowRight, CheckCircle } from "lucide-react";
+import { Building, Shield, FileCheck, Users, ArrowRight, CheckCircle, Star, Quote, Zap, Clock } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const Index = () => {
   console.log("Index component is rendering");
   
   return (
-    <div className="min-h-screen bg-gradient-subtle">
-      <Navigation />
+    <div className="min-h-screen bg-gradient-background">
+      <ModernNavigation />
+      
       {/* Hero Section */}
-      <section className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-primary opacity-5"></div>
-        <div className="container mx-auto px-6 py-20">
-          <div className="max-w-4xl mx-auto text-center">
-            <div className="flex items-center justify-center gap-3 mb-6">
-              <Building className="h-12 w-12 text-primary" />
-              <h1 className="text-5xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-                ARC Copilot
-              </h1>
+      <section className="relative pt-24 pb-20 overflow-hidden">
+        <div className="container mx-auto px-6">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            {/* Left Content */}
+            <div className="space-y-8">
+              <div className="space-y-6">
+                <h1 className="text-5xl lg:text-6xl font-bold text-foreground leading-tight">
+                  Shaping the future of
+                  <span className="text-primary block">HOA compliance</span>
+                </h1>
+                <p className="text-xl text-muted-foreground leading-relaxed">
+                  AI-powered architectural review and compliance engine built to streamline your community investments—protect decisions, minimize disputes, focus on growing your property portfolio.
+                </p>
+              </div>
+              
+              <div className="flex items-center gap-4">
+                <Badge variant="secondary" className="text-base px-4 py-2 bg-primary/10 text-primary border-primary/20">
+                  60-Day Pilot Available
+                </Badge>
+                <Badge variant="secondary" className="text-base px-4 py-2 bg-muted/20 text-foreground">
+                  No Long-term Contracts
+                </Badge>
+              </div>
+              
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Button 
+                  asChild 
+                  size="lg" 
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground text-lg px-8 py-4 shadow-glow hover:shadow-glow hover:scale-105 transition-all"
+                >
+                  <Link to="/demo">
+                    Get started
+                    <ArrowRight className="ml-2 h-5 w-5" />
+                  </Link>
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="lg" 
+                  className="text-lg px-8 py-4 border-white/20 text-foreground hover:bg-white/10"
+                >
+                  Learn More
+                </Button>
+              </div>
             </div>
-            <p className="text-xl text-muted-foreground mb-8 leading-relaxed">
-              AI-powered architectural review and compliance engine for HOA communities. 
-              Streamline decision-making with clause-cited assessments and automated compliance checking.
-            </p>
-            <div className="flex items-center justify-center gap-4 mb-12">
-              <Badge variant="info" className="text-base px-4 py-2">
-                Professional Grade
-              </Badge>
-              <Badge variant="success" className="text-base px-4 py-2">
-                Human-Verified
-              </Badge>
-            </div>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button asChild size="lg" className="bg-primary hover:bg-primary/90 text-lg px-8 py-3">
-                <Link to="/demo">
-                  🚀 View Live Demo
-                  <ArrowRight className="ml-2 h-5 w-5" />
-                </Link>
-              </Button>
-              <Button variant="outline" size="lg" className="text-lg px-8 py-3">
-                Learn More
-              </Button>
-            </div>
-            
-            {/* Quick Navigation Helper */}
-            <div className="mt-8 p-4 bg-info-light rounded-lg border border-info/20">
-              <p className="text-info-foreground text-sm">
-                <strong>Quick Start:</strong> Click "View Live Demo" above or navigate to <code className="bg-info/20 px-2 py-1 rounded text-xs">/demo</code> to see the ARC compliance assessment in action.
-              </p>
+
+            {/* Right Content - Floating Card */}
+            <div className="relative">
+              <Card className="bg-gradient-card shadow-elevated hover:shadow-glow transition-all duration-500 border-0">
+                <CardContent className="p-8">
+                  <div className="space-y-6">
+                    <div>
+                      <h3 className="text-2xl font-bold text-card-foreground mb-2">About ARC Copilot</h3>
+                      <p className="text-muted-foreground">
+                        Learn how ARC Copilot is shaping the future of architectural review compliance, one policy at a time.
+                      </p>
+                    </div>
+                    
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-2 h-2 bg-primary rounded-full"></div>
+                        <span className="text-sm text-card-foreground">Clause-cited compliance checking</span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="w-2 h-2 bg-primary rounded-full"></div>
+                        <span className="text-sm text-card-foreground">Automated decision packets</span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="w-2 h-2 bg-primary rounded-full"></div>
+                        <span className="text-sm text-card-foreground">Meeting-aware governance</span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="w-2 h-2 bg-primary rounded-full"></div>
+                        <span className="text-sm text-card-foreground">40%+ faster review cycles</span>
+                      </div>
+                    </div>
+                    
+                    <Button asChild variant="outline" className="w-full border-primary/20 text-primary hover:bg-primary/10">
+                      <Link to="/demo">
+                        See Demo
+                        <ArrowRight className="ml-2 h-4 w-4" />
+                      </Link>
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
           </div>
         </div>
@@ -61,52 +108,46 @@ const Index = () => {
       <section className="py-20">
         <div className="container mx-auto px-6">
           <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold mb-4">Why Choose ARC Copilot?</h2>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            <h2 className="text-4xl font-bold mb-6 text-foreground">Why Choose ARC Copilot?</h2>
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
               Reduce review time by 40%+ with AI-powered compliance checking and automated decision packets.
             </p>
           </div>
           
           <div className="grid md:grid-cols-3 gap-8">
-            <Card className="text-center shadow-card hover:shadow-elevated transition-smooth">
-              <CardHeader>
-                <div className="mx-auto w-16 h-16 bg-success-light rounded-2xl flex items-center justify-center mb-4">
-                  <Shield className="h-8 w-8 text-success" />
+            <Card className="text-center shadow-elevated hover:shadow-glow transition-all duration-500 bg-gradient-card border-0 group">
+              <CardContent className="p-8">
+                <div className="mx-auto w-20 h-20 bg-primary/10 rounded-3xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                  <Shield className="h-10 w-10 text-primary" />
                 </div>
-                <CardTitle>Clause-Cited Compliance</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">
+                <h3 className="text-xl font-bold mb-4 text-card-foreground">Clause-Cited Compliance</h3>
+                <p className="text-muted-foreground leading-relaxed">
                   Every decision backed by specific regulatory citations with confidence scores. 
                   No claim goes without proper documentation.
                 </p>
               </CardContent>
             </Card>
 
-            <Card className="text-center shadow-card hover:shadow-elevated transition-smooth">
-              <CardHeader>
-                <div className="mx-auto w-16 h-16 bg-info-light rounded-2xl flex items-center justify-center mb-4">
-                  <FileCheck className="h-8 w-8 text-info" />
+            <Card className="text-center shadow-elevated hover:shadow-glow transition-all duration-500 bg-gradient-card border-0 group">
+              <CardContent className="p-8">
+                <div className="mx-auto w-20 h-20 bg-primary/10 rounded-3xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                  <Zap className="h-10 w-10 text-primary" />
                 </div>
-                <CardTitle>Automated Review Packets</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">
+                <h3 className="text-xl font-bold mb-4 text-card-foreground">Automated Review Packets</h3>
+                <p className="text-muted-foreground leading-relaxed">
                   Generate board-ready decision packets with detailed assessments, 
                   reducing back-and-forth emails by 50%+.
                 </p>
               </CardContent>
             </Card>
 
-            <Card className="text-center shadow-card hover:shadow-elevated transition-smooth">
-              <CardHeader>
-                <div className="mx-auto w-16 h-16 bg-warning-light rounded-2xl flex items-center justify-center mb-4">
-                  <Users className="h-8 w-8 text-warning" />
+            <Card className="text-center shadow-elevated hover:shadow-glow transition-all duration-500 bg-gradient-card border-0 group">
+              <CardContent className="p-8">
+                <div className="mx-auto w-20 h-20 bg-primary/10 rounded-3xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                  <Clock className="h-10 w-10 text-primary" />
                 </div>
-                <CardTitle>Meeting-Aware Governance</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">
+                <h3 className="text-xl font-bold mb-4 text-card-foreground">Meeting-Aware Governance</h3>
+                <p className="text-muted-foreground leading-relaxed">
                   Enforces jurisdiction-specific voting rules and meeting requirements. 
                   Built-in guardrails for legal compliance.
                 </p>
@@ -203,54 +244,60 @@ const Index = () => {
       </section>
 
       {/* Trust Section */}
-      <section className="py-20 bg-muted/30">
+      <section className="py-20 bg-gradient-overlay">
         <div className="container mx-auto px-6">
-          <div className="max-w-4xl mx-auto">
-            <h2 className="text-3xl font-bold text-center mb-4">Built for Accountability</h2>
-            <p className="text-center text-muted-foreground mb-12 text-lg">Without legalese</p>
+          <div className="max-w-6xl mx-auto">
+            <div className="text-center mb-16">
+              <h2 className="text-4xl font-bold mb-6 text-foreground">Built for Accountability</h2>
+              <p className="text-xl text-muted-foreground">Without legalese</p>
+            </div>
             
             <div className="grid md:grid-cols-3 gap-8">
-              <Card className="text-center shadow-card hover:shadow-elevated transition-smooth bg-gradient-card">
-                <CardContent className="pt-8 pb-8">
-                  <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                    <Users className="h-8 w-8 text-primary" />
+              <Card className="text-center shadow-elevated hover:shadow-glow transition-all duration-500 bg-gradient-card border-0 group">
+                <CardContent className="p-8">
+                  <div className="w-20 h-20 bg-primary/10 rounded-3xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
+                    <Users className="h-10 w-10 text-primary" />
                   </div>
-                  <h3 className="font-semibold mb-3 text-lg">Human Oversight, Always</h3>
-                  <p className="text-muted-foreground text-sm">
+                  <h3 className="text-xl font-bold mb-4 text-card-foreground">Human Oversight, Always</h3>
+                  <p className="text-muted-foreground leading-relaxed">
                     Every letter is a draft for human review. We don't provide legal advice.
                   </p>
                 </CardContent>
               </Card>
 
-              <Card className="text-center shadow-card hover:shadow-elevated transition-smooth bg-gradient-card">
-                <CardContent className="pt-8 pb-8">
-                  <div className="w-16 h-16 bg-success/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                    <ArrowRight className="h-8 w-8 text-success" />
+              <Card className="text-center shadow-elevated hover:shadow-glow transition-all duration-500 bg-gradient-card border-0 group">
+                <CardContent className="p-8">
+                  <div className="w-20 h-20 bg-primary/10 rounded-3xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
+                    <ArrowRight className="h-10 w-10 text-primary" />
                   </div>
-                  <h3 className="font-semibold mb-3 text-lg">Data Portability</h3>
-                  <p className="text-muted-foreground text-sm">
+                  <h3 className="text-xl font-bold mb-4 text-card-foreground">Data Portability</h3>
+                  <p className="text-muted-foreground leading-relaxed">
                     You can request an export of your data (JSON/CSV + PDFs). No lock-in.
                   </p>
                 </CardContent>
               </Card>
 
-              <Card className="text-center shadow-card hover:shadow-elevated transition-smooth bg-gradient-card">
-                <CardContent className="pt-8 pb-8">
-                  <div className="w-16 h-16 bg-info/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                    <CheckCircle className="h-8 w-8 text-info" />
+              <Card className="text-center shadow-elevated hover:shadow-glow transition-all duration-500 bg-gradient-card border-0 group">
+                <CardContent className="p-8">
+                  <div className="w-20 h-20 bg-primary/10 rounded-3xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
+                    <CheckCircle className="h-10 w-10 text-primary" />
                   </div>
-                  <h3 className="font-semibold mb-3 text-lg">Transparent Operations</h3>
-                  <p className="text-muted-foreground text-sm">
+                  <h3 className="text-xl font-bold mb-4 text-card-foreground">Transparent Operations</h3>
+                  <p className="text-muted-foreground leading-relaxed">
                     We publish uptime and change logs. No credits, refunds, or SLAs.
                   </p>
                 </CardContent>
               </Card>
             </div>
 
-            <div className="mt-12 p-6 bg-muted/50 rounded-2xl border border-border">
-              <p className="text-center text-sm text-muted-foreground">
-                <strong>Note:</strong> ARC Copilot is decision support software. Outputs are drafts for human approval. No warranties or service credits are offered.
-              </p>
+            <div className="mt-16 max-w-4xl mx-auto">
+              <Card className="bg-muted/20 border border-white/10 shadow-card">
+                <CardContent className="p-8">
+                  <p className="text-center text-foreground leading-relaxed">
+                    <strong>Note:</strong> ARC Copilot is decision support software. Outputs are drafts for human approval. No warranties or service credits are offered.
+                  </p>
+                </CardContent>
+              </Card>
             </div>
           </div>
         </div>
@@ -259,20 +306,33 @@ const Index = () => {
       {/* CTA Section */}
       <section className="py-20">
         <div className="container mx-auto px-6">
-          <Card className="max-w-2xl mx-auto text-center shadow-elevated bg-gradient-primary">
-            <CardContent className="pt-12 pb-12">
-              <h3 className="text-2xl font-bold text-primary-foreground mb-4">
+          <Card className="max-w-4xl mx-auto text-center shadow-elevated bg-gradient-card border-0">
+            <CardContent className="p-16">
+              <h3 className="text-3xl font-bold text-card-foreground mb-6">
                 Ready to Streamline Your ARC Process?
               </h3>
-              <p className="text-primary-foreground/80 mb-8">
-                See how ARC Copilot can transform your community's architectural review workflow.
+              <p className="text-xl text-muted-foreground mb-12 max-w-2xl mx-auto leading-relaxed">
+                See how ARC Copilot can transform your community's architectural review workflow with AI-powered compliance checking.
               </p>
-              <Button asChild size="lg" variant="secondary" className="text-lg px-8 py-3">
-                <Link to="/demo">
-                  Explore Demo
-                  <ArrowRight className="ml-2 h-5 w-5" />
-                </Link>
-              </Button>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <Button 
+                  asChild 
+                  size="lg" 
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground text-lg px-8 py-4 shadow-glow hover:shadow-glow hover:scale-105 transition-all"
+                >
+                  <Link to="/demo">
+                    Get started
+                    <ArrowRight className="ml-2 h-5 w-5" />
+                  </Link>
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="lg" 
+                  className="text-lg px-8 py-4 border-primary/20 text-card-foreground hover:bg-primary/10"
+                >
+                  <Link to="/pricing">View Pricing</Link>
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </div>
