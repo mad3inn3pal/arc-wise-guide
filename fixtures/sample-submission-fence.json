@@ -1,0 +1,19 @@
+{
+  "id": 101,
+  "communityId": 1,
+  "projectType": "Fence",
+  "community": {
+    "name": "Mockingbird Hills HOA",
+    "state": "TX",
+    "timezone": "America/Chicago"
+  },
+  "property": {
+    "lot": "23",
+    "address": "114 Mockingbird Ln"
+  },
+  "fields": {
+    "heightFt": 7,
+    "material": "wood",
+    "style": "board-on-board"
+  }
+}

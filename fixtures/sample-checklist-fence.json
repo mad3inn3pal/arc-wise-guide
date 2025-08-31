@@ -1,0 +1,35 @@
+{
+  "submissionId": 101,
+  "results": [
+    {
+      "constraintId": "c_fence_max_height",
+      "result": "fail",
+      "rationale": "Proposed height 7 ft exceeds maximum 6 ft.",
+      "clause": {
+        "section": "§4.3(b)"
+      },
+      "quote": "Maximum fence height in rear and side yards is six (6) feet.",
+      "confidence": 0.92
+    },
+    {
+      "constraintId": "c_fence_materials_allowed",
+      "result": "pass",
+      "rationale": "Material 'wood' is allowed.",
+      "clause": {
+        "section": "§4.3(c)"
+      },
+      "quote": "Permitted materials: wood..., wrought iron.",
+      "confidence": 0.90
+    },
+    {
+      "constraintId": "missing_neighbor_notice",
+      "result": "needs-info",
+      "rationale": "Neighbor notice required for shared fences is missing for Lot 24.",
+      "clause": {
+        "section": "Appendix A"
+      },
+      "quote": "Fence: ... neighbor notice for shared fences.",
+      "confidence": 0.78
+    }
+  ]
+}
