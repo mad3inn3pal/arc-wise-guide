@@ -288,8 +288,14 @@ const Pricing = () => {
                   </div>
                   <Button 
                     onClick={() => handlePlanSelect(plan.name.toLowerCase())}
-                    className={`w-full ${plan.popular ? 'bg-primary hover:bg-primary/90' : ''}`}
-                    variant={plan.popular ? "default" : "outline"}
+                    className="w-full"
+                    variant={
+                      currentPlan?.plan === plan.name.toLowerCase() 
+                        ? "secondary" 
+                        : plan.popular 
+                        ? "default" 
+                        : "secondary"
+                    }
                     disabled={isLoading || isChanging || (currentPlan?.plan === plan.name.toLowerCase())}
                   >
                     {isLoading ? (
