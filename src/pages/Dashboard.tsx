@@ -1,17 +1,63 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Building, LogOut, Plus, FileText, Clock, Shield } from "lucide-react";
-import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Session, User } from "@supabase/supabase-js";
+import AppHeader from "@/components/dashboard/AppHeader";
+import KPIStrip from "@/components/dashboard/KPIStrip";
+import SubmissionsQueue from "@/components/dashboard/SubmissionsQueue";
+import SidePanels from "@/components/dashboard/SidePanels";
+
+interface KPIData {
+  medianCycleDays: number;
+  p95CycleDays: number;
+  requestsThisWeek: number;
+  overdue: number;
+  needsInfoRate: number;
+  outcomes: {
+    pass: number;
+    fail: number;
+    needsInfo: number;
+  };
+}
+
+interface Submission {
+  id: string;
+  submittedAt: string;
+  community: {
+    id: string;
+    name: string;
+    state: string;
+  };
+  property: {
+    lot: string;
+    address: string;
+  };
+  projectType: string;
+  lastChecklist?: {
+    result: "pass" | "fail" | "needs-info";
+    rationale: string;
+    clauseSection: string;
+  };
+  sla: {
+    dueAt: string;
+    status: "due-soon" | "overdue" | "ok";
+    deltaHours: number;
+  };
+  flags: {
+    accommodation: boolean;
+    jurisdiction: "ok" | "ca_block";
+  };
+  ownerEmail: string;
+}
 
 const Dashboard = () => {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [kpiData, setKpiData] = useState<KPIData | null>(null);
+  const [submissions, setSubmissions] = useState<Submission[]>([]);
+  const [hasData, setHasData] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -43,18 +89,76 @@ const Dashboard = () => {
     return () => subscription.unsubscribe();
   }, [navigate]);
 
-  const handleSignOut = async () => {
+  useEffect(() => {
+    if (user) {
+      loadDashboardData();
+    }
+  }, [user]);
+
+  const loadDashboardData = async () => {
     try {
-      await supabase.auth.signOut();
-      toast({
-        title: "Signed out",
-        description: "You have been successfully signed out.",
-      });
-      navigate("/");
+      // Check if org has any submissions or documents to determine if we should show onboarding
+      const { data: orgData } = await supabase
+        .from('org')
+        .select('id')
+        .eq('id', user?.user_metadata?.org_id)
+        .single();
+
+      if (orgData) {
+        const { data: submissionsData } = await supabase
+          .from('submission')
+          .select('*')
+          .eq('org_id', orgData.id)
+          .limit(1);
+
+        const { data: documentsData } = await supabase
+          .from('governing_document')
+          .select('*')
+          .eq('org_id', orgData.id)
+          .limit(1);
+
+        // Show dashboard if they have submissions or documents
+        const hasAnyData = (submissionsData && submissionsData.length > 0) || 
+                          (documentsData && documentsData.length > 0);
+        
+        setHasData(hasAnyData);
+
+        if (hasAnyData) {
+          // Load mock data for demonstration
+          setKpiData({
+            medianCycleDays: 5.2,
+            p95CycleDays: 14.0,
+            requestsThisWeek: 23,
+            overdue: 7,
+            needsInfoRate: 0.31,
+            outcomes: { pass: 12, fail: 5, needsInfo: 9 }
+          });
+
+          // Load sample submissions
+          setSubmissions([
+            {
+              id: "sub_1234567890abcdef",
+              submittedAt: "2024-12-30T10:30:00Z",
+              community: { id: "comm_123", name: "Palmera Ridge", state: "TX" },
+              property: { lot: "23", address: "114 Mockingbird Ln" },
+              projectType: "Fence",
+              lastChecklist: {
+                result: "needs-info",
+                rationale: "Fence height exceeds maximum allowed in CC&Rs section 4.3(b)",
+                clauseSection: "§4.3(b)"
+              },
+              sla: { dueAt: "2024-01-05T17:00:00Z", status: "due-soon", deltaHours: -36 },
+              flags: { accommodation: false, jurisdiction: "ok" },
+              ownerEmail: "homeowner@example.com"
+            }
+          ]);
+        }
+      }
     } catch (error) {
+      console.error('Error loading dashboard data:', error);
       toast({
         title: "Error",
-        description: "Failed to sign out. Please try again.",
+        description: "Failed to load dashboard data",
         variant: "destructive",
       });
     }
@@ -62,8 +166,8 @@ const Dashboard = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-dark flex items-center justify-center">
-        <div className="text-white">Loading...</div>
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-foreground">Loading...</div>
       </div>
     );
   }
@@ -72,122 +176,64 @@ const Dashboard = () => {
     return null;
   }
 
+  const usage = {
+    plan: user?.user_metadata?.selected_plan || 'free',
+    included: user?.user_metadata?.selected_plan === 'free' ? 3 : 25,
+    used: 0,
+    overage: 0,
+    overageRate: 5.0,
+  };
+
+  const slaRisk = {
+    overdue: kpiData?.overdue || 0,
+    dueToday: 2,
+    dueSoon: 5,
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-dark relative overflow-hidden">
-      {/* Background Effects */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-lime-500/20 via-transparent to-transparent" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_var(--tw-gradient-stops))] from-blue-500/10 via-transparent to-transparent" />
-      
-      {/* Header */}
-      <nav className="relative z-10 bg-background/80 backdrop-blur-xl border-b border-white/10">
-        <div className="container mx-auto px-6">
-          <div className="flex items-center justify-between h-16">
-            <Link to="/" className="flex items-center gap-3 group">
-              <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                <Building className="h-6 w-6 text-primary-foreground" />
+    <div className="min-h-screen bg-background">
+      <AppHeader 
+        user={user} 
+        orgName={user?.user_metadata?.org_name || "Your Organization"} 
+        usage={usage}
+      />
+
+      <div className="container mx-auto px-6 py-6">
+        {hasData ? (
+          <>
+            {/* KPI Strip */}
+            <KPIStrip data={kpiData} isLoading={false} />
+
+            {/* Main Content Grid */}
+            <div className="grid xl:grid-cols-3 lg:grid-cols-3 gap-6">
+              {/* Left: Submissions Queue (2fr) */}
+              <div className="xl:col-span-2 lg:col-span-2">
+                <SubmissionsQueue 
+                  submissions={submissions} 
+                  isLoading={false}
+                  hasData={hasData}
+                />
               </div>
-              <span className="text-xl font-bold text-white">ARC Copilot</span>
-            </Link>
-            
-            <div className="flex items-center gap-4">
-              <span className="text-sm text-muted-foreground">
-                {user.email}
-              </span>
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={handleSignOut}
-                className="border-white/20 text-white hover:bg-white/10"
-              >
-                <LogOut className="h-4 w-4 mr-2" />
-                Sign Out
-              </Button>
+
+              {/* Right: Side Panels (1fr) */}
+              <div className="xl:col-span-1 lg:col-span-1">
+                <SidePanels 
+                  usage={usage}
+                  slaRisk={slaRisk}
+                  meetings={[]}
+                  recentActivity={[]}
+                  documentsNeedingOCR={0}
+                  hasOCRFeature={usage.plan !== 'free'}
+                />
+              </div>
             </div>
+          </>
+        ) : (
+          /* Onboarding View */
+          <div className="max-w-4xl mx-auto">
+            <SubmissionsQueue hasData={false} />
           </div>
-        </div>
-      </nav>
-
-      {/* Main Content */}
-      <div className="relative z-10 container mx-auto px-6 py-12">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-12">
-            <h1 className="text-4xl font-bold text-white mb-4">
-              Welcome to ARC Copilot
-            </h1>
-            <p className="text-xl text-gray-300 mb-8">
-              AI-powered architectural review and compliance platform
-            </p>
-          </div>
-
-          {/* Quick Actions */}
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-            <Card className="bg-card/90 backdrop-blur-xl border border-white/10 shadow-elevated hover:shadow-glow transition-all group cursor-pointer">
-              <CardHeader>
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-primary/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                    <Plus className="h-6 w-6 text-primary" />
-                  </div>
-                  <div>
-                    <CardTitle className="text-card-foreground">New Review</CardTitle>
-                    <CardDescription>Start architectural review</CardDescription>
-                  </div>
-                </div>
-              </CardHeader>
-            </Card>
-
-            <Card className="bg-card/90 backdrop-blur-xl border border-white/10 shadow-elevated hover:shadow-glow transition-all group cursor-pointer">
-              <CardHeader>
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                    <FileText className="h-6 w-6 text-blue-400" />
-                  </div>
-                  <div>
-                    <CardTitle className="text-card-foreground">My Projects</CardTitle>
-                    <CardDescription>View recent submissions</CardDescription>
-                  </div>
-                </div>
-              </CardHeader>
-            </Card>
-
-            <Card className="bg-card/90 backdrop-blur-xl border border-white/10 shadow-elevated hover:shadow-glow transition-all group cursor-pointer">
-              <CardHeader>
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-orange-500/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                    <Clock className="h-6 w-6 text-orange-400" />
-                  </div>
-                  <div>
-                    <CardTitle className="text-card-foreground">Templates</CardTitle>
-                    <CardDescription>Browse review templates</CardDescription>
-                  </div>
-                </div>
-              </CardHeader>
-            </Card>
-          </div>
-
-          {/* Recent Activity */}
-          <Card className="bg-card/90 backdrop-blur-xl border border-white/10 shadow-elevated">
-            <CardHeader>
-              <CardTitle className="text-card-foreground flex items-center gap-2">
-                <Shield className="h-5 w-5 text-primary" />
-                Recent Activity
-              </CardTitle>
-              <CardDescription>Your latest architectural reviews and submissions</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-12">
-                <div className="w-16 h-16 bg-muted/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <FileText className="h-8 w-8 text-muted-foreground" />
-                </div>
-                <h3 className="text-lg font-semibold text-card-foreground mb-2">No projects yet</h3>
-                <p className="text-muted-foreground mb-6">Start your first architectural review to see activity here.</p>
-                <Button className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-glow hover:shadow-glow hover:scale-105 transition-all">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Start New Review
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+        )}
       </div>
     </div>
   );
