@@ -13,6 +13,7 @@ import { Building, Menu, X, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const Navigation = () => {
+  console.log("Navigation component is rendering");
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
 

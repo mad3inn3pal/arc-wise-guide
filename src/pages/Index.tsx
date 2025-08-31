@@ -7,6 +7,8 @@ import { Building, Shield, FileCheck, Users, ArrowRight, CheckCircle } from "luc
 import { Link } from "react-router-dom";
 
 const Index = () => {
+  console.log("Index component is rendering");
+  
   return (
     <div className="min-h-screen bg-gradient-subtle">
       <Navigation />
