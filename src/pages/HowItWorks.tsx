@@ -183,9 +183,9 @@ const HowItWorks = () => {
             <div className="space-y-6">
               <Alert className="border-warning bg-warning-light">
                 <AlertTriangle className="h-5 w-5" />
-                <AlertTitle className="text-warning-foreground">No PASS Without Citation</AlertTitle>
+                <AlertTitle className="text-warning-foreground">No PASS Without Citation (System Enforced)</AlertTitle>
                 <AlertDescription className="text-warning-foreground">
-                  System rule: Any "pass" result without clause.section + quote is automatically downgraded to "needs-info". 
+                  <strong>Server-side rule:</strong> Any "pass" result without both clause.section + quote is automatically downgraded to "needs-info" with rationale "Missing citation—requires human review." 
                   Every approval must be backed by specific regulatory text.
                 </AlertDescription>
               </Alert>

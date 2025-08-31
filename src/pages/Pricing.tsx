@@ -23,12 +23,19 @@ const Pricing = () => {
       ],
       limitations: [
         "No OCR",
-        "No LLM analysis",
+        "No LLM analysis", 
         "No integrations",
         "No meeting mode"
       ],
       cta: "Get Started",
-      popular: false
+      popular: false,
+      planFeatures: {
+        ocr: false,
+        llm: false,
+        meeting: false,
+        webhooks: false,
+        sso: false
+      }
     },
     {
       name: "Starter",
@@ -38,11 +45,11 @@ const Pricing = () => {
       overage: "$3.00 per extra submission",
       features: [
         "1 community",
-        "2 board seats",
+        "2 board seats", 
         "Deterministic checks",
         "Lightweight AI classification",
-        "Draft letters",
-        "Email support"
+        "Draft letters allowed",
+        "Limited storage"
       ],
       limitations: [
         "No OCR on documents",
@@ -50,7 +57,14 @@ const Pricing = () => {
         "No meeting mode"
       ],
       cta: "Start Pilot",
-      popular: false
+      popular: false,
+      planFeatures: {
+        ocr: false,
+        llm: "light",
+        meeting: false,
+        webhooks: false,
+        sso: false
+      }
     },
     {
       name: "Growth", 
@@ -61,15 +75,22 @@ const Pricing = () => {
       features: [
         "1 community",
         "5 board seats",
-        "OCR on governing docs",
+        "OCR on governing documents",
         "Meeting mode",
-        "Packet PDFs",
+        "Decision packets (PDF)",
         "Webhooks",
         "Priority support"
       ],
       limitations: [],
       cta: "Start Pilot",
-      popular: true
+      popular: true,
+      planFeatures: {
+        ocr: true,
+        llm: true,
+        meeting: true,
+        webhooks: true,
+        sso: false
+      }
     },
     {
       name: "Pro",
@@ -89,7 +110,14 @@ const Pricing = () => {
       ],
       limitations: [],
       cta: "Start Pilot",
-      popular: false
+      popular: false,
+      planFeatures: {
+        ocr: true,
+        llm: true,
+        meeting: true,
+        webhooks: true,
+        sso: true
+      }
     }
   ];
 
@@ -220,6 +248,63 @@ const Pricing = () => {
                   </Button>
                 </div>
               </CardContent>
+            </Card>
+          </div>
+
+          {/* Feature Matrix */}
+          <div className="mt-16">
+            <h3 className="text-2xl font-bold text-center mb-8">Feature Comparison</h3>
+            <Card className="shadow-elevated overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-muted/50">
+                    <tr>
+                      <th className="text-left p-4 font-semibold">Feature</th>
+                      <th className="text-center p-4 font-semibold">Free</th>
+                      <th className="text-center p-4 font-semibold">Starter</th>
+                      <th className="text-center p-4 font-semibold">Growth</th>
+                      <th className="text-center p-4 font-semibold">Pro</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr className="border-t">
+                      <td className="p-4 font-medium">OCR on Documents</td>
+                      <td className="text-center p-4"><X className="h-4 w-4 text-muted-foreground mx-auto" /></td>
+                      <td className="text-center p-4"><X className="h-4 w-4 text-muted-foreground mx-auto" /></td>
+                      <td className="text-center p-4"><Check className="h-4 w-4 text-success mx-auto" /></td>
+                      <td className="text-center p-4"><Check className="h-4 w-4 text-success mx-auto" /></td>
+                    </tr>
+                    <tr className="border-t bg-muted/20">
+                      <td className="p-4 font-medium">LLM Analysis</td>
+                      <td className="text-center p-4"><X className="h-4 w-4 text-muted-foreground mx-auto" /></td>
+                      <td className="text-center p-4"><span className="text-xs text-warning">Light</span></td>
+                      <td className="text-center p-4"><Check className="h-4 w-4 text-success mx-auto" /></td>
+                      <td className="text-center p-4"><Check className="h-4 w-4 text-success mx-auto" /></td>
+                    </tr>
+                    <tr className="border-t">
+                      <td className="p-4 font-medium">Meeting Mode</td>
+                      <td className="text-center p-4"><X className="h-4 w-4 text-muted-foreground mx-auto" /></td>
+                      <td className="text-center p-4"><X className="h-4 w-4 text-muted-foreground mx-auto" /></td>
+                      <td className="text-center p-4"><Check className="h-4 w-4 text-success mx-auto" /></td>
+                      <td className="text-center p-4"><Check className="h-4 w-4 text-success mx-auto" /></td>
+                    </tr>
+                    <tr className="border-t bg-muted/20">
+                      <td className="p-4 font-medium">Webhooks</td>
+                      <td className="text-center p-4"><X className="h-4 w-4 text-muted-foreground mx-auto" /></td>
+                      <td className="text-center p-4"><X className="h-4 w-4 text-muted-foreground mx-auto" /></td>
+                      <td className="text-center p-4"><Check className="h-4 w-4 text-success mx-auto" /></td>
+                      <td className="text-center p-4"><Check className="h-4 w-4 text-success mx-auto" /></td>
+                    </tr>
+                    <tr className="border-t">
+                      <td className="p-4 font-medium">SSO (SAML)</td>
+                      <td className="text-center p-4"><X className="h-4 w-4 text-muted-foreground mx-auto" /></td>
+                      <td className="text-center p-4"><X className="h-4 w-4 text-muted-foreground mx-auto" /></td>
+                      <td className="text-center p-4"><X className="h-4 w-4 text-muted-foreground mx-auto" /></td>
+                      <td className="text-center p-4"><Check className="h-4 w-4 text-success mx-auto" /></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
             </Card>
           </div>
         </div>

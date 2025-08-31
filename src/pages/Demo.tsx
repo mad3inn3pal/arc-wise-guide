@@ -137,6 +137,20 @@ const Demo = () => {
       </header>
 
       <main className="container mx-auto px-6 py-8">
+        <div className="max-w-6xl mx-auto">
+          {/* Demo Banner */}
+          <div className="mb-8 p-4 bg-info-light rounded-lg border border-info/20">
+            <div className="flex items-center gap-3">
+              <AlertTriangle className="h-5 w-5 text-info" />
+              <div>
+                <p className="text-info-foreground font-semibold">Demo Environment</p>
+                <p className="text-sm text-info-foreground">
+                  This demo runs on Growth plan features. Upgrade to access OCR, meeting mode, and packet generation.
+                </p>
+              </div>
+            </div>
+          </div>
+
         {/* Submission Overview */}
         <Card className="mb-8 shadow-card">
           <CardHeader>
@@ -215,6 +229,7 @@ const Demo = () => {
             </p>
           </CardContent>
         </Card>
+        </div>
       </main>
     </div>
   );

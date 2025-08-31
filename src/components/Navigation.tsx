@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/navigation-menu";
 import { Building, Menu, X, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
+import UsageMeter from "./UsageMeter";
 
 const Navigation = () => {
   console.log("Navigation component is rendering");
@@ -142,13 +143,26 @@ const Navigation = () => {
               </NavigationMenuList>
             </NavigationMenu>
 
-            <div className="flex items-center gap-3">
-              <Button variant="ghost" asChild>
-                <Link to="/login">Log in</Link>
-              </Button>
-              <Button asChild>
-                <Link to="/demo">Book a Demo</Link>
-              </Button>
+            <div className="flex items-center gap-4">
+              {/* Usage Meter (mock data for demo) */}
+              <div className="hidden xl:block">
+                <UsageMeter 
+                  plan="growth"
+                  included={240}
+                  used={87}
+                  overage={0}
+                  overageRate={2.00}
+                />
+              </div>
+              
+              <div className="flex items-center gap-3">
+                <Button variant="ghost" asChild>
+                  <Link to="/login">Log in</Link>
+                </Button>
+                <Button asChild>
+                  <Link to="/demo">Book a Demo</Link>
+                </Button>
+              </div>
             </div>
           </div>
 
