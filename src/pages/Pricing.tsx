@@ -1,12 +1,86 @@
+import { useState, useEffect } from "react";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Check, X, ArrowRight } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Check, X, ArrowRight, Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useBilling } from "@/hooks/useBilling";
+import { useToast } from "@/hooks/use-toast";
 
 const Pricing = () => {
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const { plan: currentPlan, isLoading, previewPlanChange, changePlan, isChanging } = useBilling();
+  const [confirmDialog, setConfirmDialog] = useState<{
+    plan: string;
+    preview: any;
+  } | null>(null);
+
+  const from = searchParams.get('from');
+  const returnTo = searchParams.get('returnTo');
+
+  const handlePlanSelect = async (targetPlan: string) => {
+    if (!currentPlan) return;
+    
+    if (currentPlan.plan === targetPlan) {
+      toast({
+        title: "Current Plan",
+        description: "This is already your current plan",
+      });
+      return;
+    }
+
+    try {
+      const preview = await previewPlanChange({ plan: targetPlan });
+      if (!preview.allowed) {
+        toast({
+          title: "Cannot Change Plan",
+          description: preview.reason,
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      setConfirmDialog({ plan: targetPlan, preview });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to preview plan change",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleConfirmChange = async () => {
+    if (!confirmDialog) return;
+    
+    try {
+      const result = await changePlan({
+        plan: confirmDialog.plan,
+        returnTo: returnTo || undefined,
+      });
+      
+      setConfirmDialog(null);
+      
+      if (result.redirect) {
+        window.location.href = result.redirect;
+      }
+    } catch (error: any) {
+      // Error handled by mutation
+    }
+  };
+
+  useEffect(() => {
+    // Handle auto-opening invite modal after upgrade
+    if (returnTo?.includes('open=invites') && currentPlan?.features.INVITES) {
+      navigate('/app?open=invites', { replace: true });
+    }
+  }, [currentPlan, returnTo, navigate]);
   const plans = [
     {
       name: "Free",
@@ -213,19 +287,37 @@ const Pricing = () => {
                     ))}
                   </div>
                   <Button 
-                    asChild 
+                    onClick={() => handlePlanSelect(plan.name.toLowerCase())}
                     className={`w-full ${plan.popular ? 'bg-primary hover:bg-primary/90' : ''}`}
                     variant={plan.popular ? "default" : "outline"}
+                    disabled={isLoading || isChanging || (currentPlan?.plan === plan.name.toLowerCase())}
                   >
-                    <Link to="/demo">
-                      {plan.cta}
+                    {isLoading ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : currentPlan?.plan === plan.name.toLowerCase() ? (
+                      "Current Plan"
+                    ) : currentPlan && currentPlan.plan > plan.name.toLowerCase() ? (
+                      <>Downgrade to {plan.name}</>
+                    ) : (
+                      <>Upgrade to {plan.name}</>
+                    )}
+                    {currentPlan?.plan !== plan.name.toLowerCase() && !isLoading && (
                       <ArrowRight className="ml-2 h-4 w-4" />
-                    </Link>
+                    )}
                   </Button>
                 </CardContent>
               </Card>
             ))}
           </div>
+
+          {/* Current Plan Badge */}
+          {currentPlan && (
+            <div className="mt-8 text-center">
+              <Badge variant="secondary" className="text-lg px-6 py-2">
+                Current Plan: {currentPlan.plan.charAt(0).toUpperCase() + currentPlan.plan.slice(1)} · {currentPlan.seats.used}/{currentPlan.included} this month
+              </Badge>
+            </div>
+          )}
 
           {/* Management Company Plan */}
           <div className="mt-12">
@@ -441,6 +533,35 @@ const Pricing = () => {
       </section>
 
       <Footer />
+      
+      {/* Confirmation Dialog */}
+      <Dialog open={!!confirmDialog} onOpenChange={() => setConfirmDialog(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Switch to {confirmDialog?.plan.charAt(0).toUpperCase()}{confirmDialog?.plan.slice(1)}?</DialogTitle>
+            <DialogDescription className="space-y-2">
+              <p>This will change your plan to {confirmDialog?.plan} with:</p>
+              <ul className="list-disc list-inside space-y-1 text-sm">
+                <li>{confirmDialog?.preview?.included} submissions/month included</li>
+                <li>${confirmDialog?.preview?.overage_rate} per extra submission</li>
+                <li>{confirmDialog?.preview?.seat_limit ? `${confirmDialog.preview.seat_limit} board seats` : 'Unlimited board seats'}</li>
+              </ul>
+              <p className="text-xs text-muted-foreground mt-4">
+                No legal advice. No SLA. You can cancel anytime.
+              </p>
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex gap-2 justify-end">
+            <Button variant="outline" onClick={() => setConfirmDialog(null)}>
+              Cancel
+            </Button>
+            <Button onClick={handleConfirmChange} disabled={isChanging}>
+              {isChanging && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
+              Confirm Change
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

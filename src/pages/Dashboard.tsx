@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Session, User } from "@supabase/supabase-js";
@@ -60,6 +60,15 @@ const Dashboard = () => {
   const [hasData, setHasData] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [searchParams] = useSearchParams();
+
+  const usage = {
+    plan: user?.user_metadata?.selected_plan || 'free',
+    included: user?.user_metadata?.selected_plan === 'free' ? 3 : 25,
+    used: 0,
+    overage: 0,
+    overageRate: 5.0,
+  };
 
   useEffect(() => {
     // Set up auth state listener
@@ -104,6 +113,16 @@ const Dashboard = () => {
       loadDashboardData();
     }
   }, [user, navigate]);
+
+  // Handle auto-opening invite modal after upgrade
+  useEffect(() => {
+    const openParam = searchParams.get('open');
+    if (openParam === 'invites' && hasData && usage.plan !== 'free') {
+      // Auto-open invite modal and remove query param
+      navigate('/app', { replace: true });
+      // TODO: Open invite modal programmatically
+    }
+  }, [searchParams, hasData, usage.plan, navigate]);
 
   const loadDashboardData = async () => {
     try {
@@ -197,14 +216,6 @@ const Dashboard = () => {
   if (!user) {
     return null;
   }
-
-  const usage = {
-    plan: user?.user_metadata?.selected_plan || 'free',
-    included: user?.user_metadata?.selected_plan === 'free' ? 3 : 25,
-    used: 0,
-    overage: 0,
-    overageRate: 5.0,
-  };
 
   const slaRisk = {
     overdue: kpiData?.overdue || 0,

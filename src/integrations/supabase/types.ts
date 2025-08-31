@@ -332,28 +332,40 @@ export type Database = {
       }
       plan_subscription: {
         Row: {
+          billing_cycle: string
           created_at: string
           monthly_reset_day: number
           org_id: string
           overage_rate: number
           plan: string
+          status: string
           submissions_included: number
+          trial_ends_at: string | null
+          updated_at: string
         }
         Insert: {
+          billing_cycle?: string
           created_at?: string
           monthly_reset_day?: number
           org_id: string
           overage_rate: number
           plan: string
+          status?: string
           submissions_included: number
+          trial_ends_at?: string | null
+          updated_at?: string
         }
         Update: {
+          billing_cycle?: string
           created_at?: string
           monthly_reset_day?: number
           org_id?: string
           overage_rate?: number
           plan?: string
+          status?: string
           submissions_included?: number
+          trial_ends_at?: string | null
+          updated_at?: string
         }
         Relationships: [
           {
@@ -538,6 +550,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_downgrade_to: {
+        Args: { p_org: string; p_plan: string }
+        Returns: boolean
+      }
       create_org_with_member: {
         Args: { org_name: string }
         Returns: string

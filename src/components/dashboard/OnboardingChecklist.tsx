@@ -228,7 +228,8 @@ const OnboardingChecklist = () => {
           break;
         case "invite":
           if (userPlan === "free") {
-            setUpgradeModalOpen(true);
+            // Redirect directly to pricing with return path
+            window.location.href = '/pricing?from=invites&returnTo=/app?open=invites';
           } else {
             setInviteModalOpen(true);
           }

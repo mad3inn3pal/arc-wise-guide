@@ -21,6 +21,7 @@ import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import UsageMeter from "@/components/UsageMeter";
+import PlanBadge from "@/components/PlanBadge";
 
 interface AppHeaderProps {
   user: any;
@@ -109,7 +110,12 @@ const AppHeader = ({ user, orgName = "Your Organization", usage }: AppHeaderProp
                 </DropdownMenuContent>
               </DropdownMenu>
 
-              {/* Plan & Usage */}
+              {/* Plan Badge */}
+              <div className="hidden lg:flex">
+                <PlanBadge />
+              </div>
+
+              {/* Usage Meter */}
               {usage && (
                 <div className="hidden md:block">
                   <UsageMeter {...usage} />

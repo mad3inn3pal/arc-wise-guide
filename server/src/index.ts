@@ -76,14 +76,26 @@ async function getPlan(org_id: string, devOverride?: string) {
   return data;
 }
 
+const PLAN_FEATURES = {
+  free:    { OCR:false, LLM:false, MEETING:false, WEBHOOKS:false, SSO:false, INVITES:false },
+  starter: { OCR:false, LLM:true,  MEETING:false, WEBHOOKS:false, SSO:false, INVITES:true },
+  growth:  { OCR:true,  LLM:true,  MEETING:true,  WEBHOOKS:true,  SSO:false, INVITES:true },  
+  pro:     { OCR:true,  LLM:true,  MEETING:true,  WEBHOOKS:true,  SSO:true,  INVITES:true },
+};
+
+const PLAN_CONFIG = {
+  free:    { included: 4,   overage_rate: 999,  seat_limit: 1 },
+  starter: { included: 60,  overage_rate: 3.00, seat_limit: 2 },
+  growth:  { included: 240, overage_rate: 2.00, seat_limit: 5 },
+  pro:     { included: 600, overage_rate: 1.25, seat_limit: null },
+};
+
 function featureAllowed(plan: string, feature: string) {
-  const gates: Record<string, Record<string, boolean>> = {
-    free:    { OCR:false, LLM:false, MEETING:false, WEBHOOKS:false, SSO:false },
-    starter: { OCR:false, LLM:true,  MEETING:false, WEBHOOKS:false, SSO:false },
-    growth:  { OCR:true,  LLM:true,  MEETING:true,  WEBHOOKS:true,  SSO:false },
-    pro:     { OCR:true,  LLM:true,  MEETING:true,  WEBHOOKS:true,  SSO:true  },
-  };
-  return !!gates[plan]?.[feature];
+  return !!PLAN_FEATURES[plan as keyof typeof PLAN_FEATURES]?.[feature as keyof typeof PLAN_FEATURES['free']];
+}
+
+function getPlanConfig(plan: string) {
+  return PLAN_CONFIG[plan as keyof typeof PLAN_CONFIG] || PLAN_CONFIG.free;
 }
 
 async function enforceQuota(org_id: string, planRow: any) {
@@ -119,6 +131,43 @@ function guardChecklist(items: any[]) {
 // Routes
 app.get('/api/ping', (_req, res) => res.json({ ok: true }));
 
+// Returns current plan details
+app.get('/api/billing/plan', requireAuth, async (req: any, res) => {
+  try {
+    const org_id = req.user.user_metadata?.org_id;
+    if (!org_id) return res.status(400).json({ error:'missing org_id on user' });
+    
+    const { data } = await sb.from('plan_subscription').select('*').eq('org_id', org_id).maybeSingle();
+    const plan = data?.plan || 'free';
+    const billing_cycle = data?.billing_cycle || 'monthly';
+    const status = data?.status || 'active';
+    
+    const config = getPlanConfig(plan);
+    const features = PLAN_FEATURES[plan as keyof typeof PLAN_FEATURES] || PLAN_FEATURES.free;
+    
+    // Get seat usage
+    const { data: seatData } = await sb.from('org_member')
+      .select('*', { count: 'exact' })
+      .eq('org_id', org_id)
+      .in('role', ['board', 'manager']);
+    
+    return res.json({
+      plan,
+      billing_cycle,
+      status,
+      included: config.included,
+      overage_rate: config.overage_rate,
+      seats: {
+        limit: config.seat_limit,
+        used: seatData?.length || 0
+      },
+      features
+    });
+  } catch (error: any) {
+    return res.status(500).json({ error: error.message });
+  }
+});
+
 // Returns plan + usage meter
 app.get('/api/billing/usage', requireAuth, async (req: any, res) => {
   try {
@@ -138,6 +187,121 @@ app.get('/api/billing/usage', requireAuth, async (req: any, res) => {
       used, 
       month, 
       overage_rate: plan.overage_rate 
+    });
+  } catch (error: any) {
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+// Preview plan change
+app.post('/api/billing/plan/preview', requireAuth, async (req: any, res) => {
+  try {
+    const org_id = req.user.user_metadata?.org_id;
+    if (!org_id) return res.status(400).json({ error:'missing org_id' });
+    
+    const { plan, billing_cycle = 'monthly' } = req.body || {};
+    if (!plan || !['free','starter','growth','pro'].includes(plan)) {
+      return res.status(400).json({ error:'invalid plan' });
+    }
+    if (!['monthly','annual'].includes(billing_cycle)) {
+      return res.status(400).json({ error:'invalid billing_cycle' });
+    }
+    
+    // Check if org can downgrade
+    const { data: canDowngrade } = await sb.rpc('can_downgrade_to', { p_org: org_id, p_plan: plan });
+    if (!canDowngrade) {
+      const config = getPlanConfig(plan);
+      return res.json({
+        allowed: false,
+        reason: `You currently have more active seats than ${plan} allows (limit: ${config.seat_limit || 'unlimited'}). Remove board members first.`
+      });
+    }
+    
+    const config = getPlanConfig(plan);
+    const features = PLAN_FEATURES[plan as keyof typeof PLAN_FEATURES] || PLAN_FEATURES.free;
+    
+    return res.json({
+      allowed: true,
+      included: config.included,
+      overage_rate: config.overage_rate,
+      seat_limit: config.seat_limit,
+      features
+    });
+  } catch (error: any) {
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+// Change plan
+app.post('/api/billing/plan/change', requireAuth, async (req: any, res) => {
+  try {
+    const org_id = req.user.user_metadata?.org_id;
+    if (!org_id) return res.status(400).json({ error:'missing org_id' });
+    
+    // Check if user is org admin
+    const { data: member } = await sb.from('org_member')
+      .select('role')
+      .eq('org_id', org_id)
+      .eq('user_id', req.user.id)
+      .maybeSingle();
+    
+    if (!member || member.role !== 'admin') {
+      return res.status(403).json({ error:'Admin only. Ask an org admin to change plans.' });
+    }
+    
+    const { plan, billing_cycle = 'monthly', returnTo } = req.body || {};
+    if (!plan || !['free','starter','growth','pro'].includes(plan)) {
+      return res.status(400).json({ error:'invalid plan' });
+    }
+    
+    // Get current plan
+    const { data: currentPlan } = await sb.from('plan_subscription')
+      .select('*')
+      .eq('org_id', org_id)
+      .maybeSingle();
+    
+    if (currentPlan?.plan === plan && currentPlan?.billing_cycle === billing_cycle) {
+      return res.json({ unchanged: true, plan });
+    }
+    
+    // Check if org can downgrade
+    const { data: canDowngrade } = await sb.rpc('can_downgrade_to', { p_org: org_id, p_plan: plan });
+    if (!canDowngrade) {
+      return res.status(409).json({ error:'Seat limit exceeded for target plan' });
+    }
+    
+    const config = getPlanConfig(plan);
+    
+    // Update or insert plan subscription
+    const { error } = await sb.from('plan_subscription')
+      .upsert({
+        org_id,
+        plan,
+        billing_cycle,
+        status: 'active',
+        submissions_included: config.included,
+        overage_rate: config.overage_rate,
+        updated_at: new Date().toISOString()
+      });
+    
+    if (error) {
+      return res.status(500).json({ error: error.message });
+    }
+    
+    // Audit log
+    await sb.from('audit_event').insert({
+      org_id,
+      actor_id: req.user.id,
+      entity: 'plan_subscription',
+      action: 'plan_change',
+      entity_id: org_id,
+      hash: JSON.stringify({ from: currentPlan?.plan || 'free', to: plan })
+    });
+    
+    return res.json({
+      changed: true,
+      plan,
+      redirect: returnTo || null
     });
   } catch (error: any) {
     return res.status(500).json({ error: error.message });
