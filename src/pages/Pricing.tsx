@@ -15,7 +15,15 @@ const Pricing = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { plan: currentPlan, isLoading, previewPlanChange, changePlan, isChanging } = useBilling();
+  const { 
+    plan: currentPlan, 
+    isLoading, 
+    previewPlanChange, 
+    changePlan, 
+    checkout,
+    isChanging,
+    isCheckingOut 
+  } = useBilling();
   const [confirmDialog, setConfirmDialog] = useState<{
     plan: string;
     preview: any;
@@ -60,16 +68,25 @@ const Pricing = () => {
     if (!confirmDialog) return;
     
     try {
-      const result = await changePlan({
-        plan: confirmDialog.plan,
-        returnTo: returnTo || undefined,
-      });
+      if (confirmDialog.plan === 'free') {
+        // Free plan - update directly in database
+        const result = await changePlan({
+          plan: confirmDialog.plan,
+          returnTo: returnTo || undefined,
+        });
+        
+        if (result.redirect) {
+          window.location.href = result.redirect;
+        }
+      } else {
+        // Paid plan - redirect to Stripe checkout
+        await checkout({
+          plan: confirmDialog.plan,
+          returnTo: returnTo || undefined,
+        });
+      }
       
       setConfirmDialog(null);
-      
-      if (result.redirect) {
-        window.location.href = result.redirect;
-      }
     } catch (error: any) {
       // Error handled by mutation
     }
@@ -296,9 +313,9 @@ const Pricing = () => {
                         ? "default" 
                         : "secondary"
                     }
-                    disabled={isLoading || isChanging || (currentPlan?.plan === plan.name.toLowerCase())}
+                    disabled={isLoading || isChanging || isCheckingOut || (currentPlan?.plan === plan.name.toLowerCase())}
                   >
-                    {isLoading ? (
+                    {isLoading || isChanging || isCheckingOut ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
                     ) : currentPlan?.plan === plan.name.toLowerCase() ? (
                       "Current Plan"
@@ -561,8 +578,8 @@ const Pricing = () => {
             <Button variant="outline" onClick={() => setConfirmDialog(null)}>
               Cancel
             </Button>
-            <Button onClick={handleConfirmChange} disabled={isChanging}>
-              {isChanging && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
+            <Button onClick={handleConfirmChange} disabled={isChanging || isCheckingOut}>
+              {(isChanging || isCheckingOut) && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
               Confirm Change
             </Button>
           </div>

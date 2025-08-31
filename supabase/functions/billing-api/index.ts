@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import Stripe from "https://esm.sh/stripe@14.21.0";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -19,6 +20,22 @@ const PLAN_CONFIG = {
   growth:  { included: 240, overage_rate: 2.00, seat_limit: 5 },
   pro:     { included: 600, overage_rate: 1.25, seat_limit: null },
 };
+
+// Stripe price mapping - in production, these should be env vars
+const STRIPE_PRICES = {
+  'starter-monthly': 'price_1QalGVJ6CAcd7vGsSooZrN3l',  // $149/month
+  'growth-monthly': 'price_1QalGWJ6CAcd7vGs8ZjcUcCb',   // $399/month  
+  'pro-monthly': 'price_1QalGXJ6CAcd7vGsKwOnDcCA',      // $799/month
+  'starter-annual': 'price_1QalGYJ6CAcd7vGsY4WvLnGb',   // $127/month (billed annually)
+  'growth-annual': 'price_1QalGZJ6CAcd7vGsI7aXyHWO',    // $339/month (billed annually)
+  'pro-annual': 'price_1QalGaJ6CAcd7vGsQRZmeBGf',       // $679/month (billed annually)
+};
+
+function priceIdFor(plan: string, cycle: string): string | null {
+  if (plan === 'free') return null;
+  const key = `${plan}-${cycle}` as keyof typeof STRIPE_PRICES;
+  return STRIPE_PRICES[key] || null;
+}
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -132,6 +149,98 @@ serve(async (req) => {
           seat_limit: config.seat_limit,
           features
         }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      case 'checkout': {
+        // Check if user is org admin
+        const { data: member } = await supabase
+          .from('org_member')
+          .select('role')
+          .eq('org_id', org_id)
+          .eq('user_id', user.id)
+          .maybeSingle();
+        
+        if (!member || member.role !== 'admin') {
+          return new Response(JSON.stringify({ error: 'Admin only. Ask an org admin to change plans.' }), {
+            status: 403,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+
+        if (!plan || !['starter','growth','pro'].includes(plan)) {
+          return new Response(JSON.stringify({ error: 'Invalid plan' }), {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+
+        // Initialize Stripe
+        const stripeKey = Deno.env.get('STRIPE_SECRET_KEY');
+        if (!stripeKey) {
+          return new Response(JSON.stringify({ error: 'Stripe not configured' }), {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+        
+        const stripe = new Stripe(stripeKey, { apiVersion: '2023-10-16' });
+        
+        // Get or create Stripe customer
+        const { data: org } = await supabase
+          .from('org')
+          .select('stripe_customer_id, name')
+          .eq('id', org_id)
+          .single();
+          
+        let customerId = org?.stripe_customer_id;
+        
+        if (!customerId) {
+          const customer = await stripe.customers.create({
+            email: user.email,
+            name: org?.name || `Organization ${org_id}`,
+            metadata: { org_id }
+          });
+          customerId = customer.id;
+          
+          // Save customer ID
+          await supabase
+            .from('org')
+            .update({ stripe_customer_id: customerId })
+            .eq('id', org_id);
+        }
+        
+        // Get price ID
+        const priceId = priceIdFor(plan, billing_cycle);
+        if (!priceId) {
+          return new Response(JSON.stringify({ error: 'Price not found' }), {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+        
+        // Create checkout session
+        const origin = req.headers.get('origin') || 'http://localhost:5173';
+        const session = await stripe.checkout.sessions.create({
+          customer: customerId,
+          line_items: [{
+            price: priceId,
+            quantity: 1,
+          }],
+          mode: 'subscription',
+          success_url: `${origin}/pricing/complete?session_id={CHECKOUT_SESSION_ID}&returnTo=${encodeURIComponent(returnTo || '/pricing')}`,
+          cancel_url: `${origin}/pricing?cancelled=true`,
+          subscription_data: {
+            metadata: { 
+              org_id, 
+              plan, 
+              billing_cycle 
+            },
+          },
+        });
+
+        return new Response(JSON.stringify({ url: session.url }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }

@@ -14,6 +14,7 @@ import Demo from "./pages/Demo";
 import Product from "./pages/Product";
 import HowItWorks from "./pages/HowItWorks";
 import Pricing from "./pages/Pricing";
+import PricingComplete from "./pages/PricingComplete";
 import Security from "./pages/Security";
 import NotFound from "./pages/NotFound";
 
@@ -31,6 +32,7 @@ function AppRouter() {
             <Route path="/" element={<Index />} />
             <Route path="/how-it-works" element={<HowItWorks />} />
             <Route path="/pricing" element={<Pricing />} />
+            <Route path="/pricing/complete" element={<PricingComplete />} />
             <Route path="/product" element={<Product />} />
             <Route path="/security" element={<Security />} />
             <Route path="/demo" element={<Demo />} />

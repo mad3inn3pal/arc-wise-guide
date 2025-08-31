@@ -60,6 +60,17 @@ export const useBilling = () => {
     return data;
   };
 
+  const checkout = async ({ plan, billing_cycle, returnTo }: { plan: string; billing_cycle?: string; returnTo?: string }): Promise<{ url: string }> => {
+    const idempotencyKey = crypto.randomUUID();
+    const { data, error } = await supabase.functions.invoke('billing-api', {
+      body: { action: 'checkout', plan, billing_cycle, returnTo },
+      headers: { 'Idempotency-Key': idempotencyKey },
+    });
+    
+    if (error) throw error;
+    return data;
+  };
+
   const changePlan = async ({ plan, billing_cycle, returnTo }: { plan: string; billing_cycle?: string; returnTo?: string }): Promise<ChangeData> => {
     const idempotencyKey = crypto.randomUUID();
     const { data, error } = await supabase.functions.invoke('billing-api', {
@@ -78,6 +89,21 @@ export const useBilling = () => {
 
   const previewMutation = useMutation({
     mutationFn: previewPlanChange,
+  });
+
+  const checkoutMutation = useMutation({
+    mutationFn: checkout,
+    onSuccess: (data) => {
+      // Redirect to Stripe checkout
+      window.open(data.url, '_blank');
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to start checkout",
+        variant: "destructive",
+      });
+    },
   });
 
   const changeMutation = useMutation({
@@ -106,6 +132,8 @@ export const useBilling = () => {
     error: planQuery.error,
     previewPlanChange: previewMutation.mutateAsync,
     changePlan: changeMutation.mutateAsync,
+    checkout: checkoutMutation.mutateAsync,
     isChanging: changeMutation.isPending,
+    isCheckingOut: checkoutMutation.isPending,
   };
 };
