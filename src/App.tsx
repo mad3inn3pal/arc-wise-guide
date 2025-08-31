@@ -9,7 +9,6 @@ import Auth from "./pages/Auth";
 import Login from "./pages/Login";
 import AuthCallback from "./pages/AuthCallback";
 import Onboarding from "./pages/Onboarding";
-import App from "./pages/App";
 import Dashboard from "./pages/Dashboard";
 import Demo from "./pages/Demo";
 import Product from "./pages/Product";
@@ -43,7 +42,7 @@ function AppRouter() {
             
             {/* App pages */}
             <Route path="/app/onboarding" element={<Onboarding />} />
-            <Route path="/app" element={<App />} />
+            <Route path="/app" element={<Dashboard />} />
             
             {/* Legacy dashboard route */}
             <Route path="/dashboard" element={<Dashboard />} />
