@@ -21,14 +21,14 @@ const PLAN_CONFIG = {
   pro:     { included: 600, overage_rate: 1.25, seat_limit: null },
 };
 
-// Stripe price mapping - in production, these should be env vars
+// Stripe price mapping - REPLACE THESE WITH YOUR ACTUAL STRIPE PRICE IDS
 const STRIPE_PRICES = {
-  'starter-monthly': 'price_1QalGVJ6CAcd7vGsSooZrN3l',  // $149/month
-  'growth-monthly': 'price_1QalGWJ6CAcd7vGs8ZjcUcCb',   // $399/month  
-  'pro-monthly': 'price_1QalGXJ6CAcd7vGsKwOnDcCA',      // $799/month
-  'starter-annual': 'price_1QalGYJ6CAcd7vGsY4WvLnGb',   // $127/month (billed annually)
-  'growth-annual': 'price_1QalGZJ6CAcd7vGsI7aXyHWO',    // $339/month (billed annually)
-  'pro-annual': 'price_1QalGaJ6CAcd7vGsQRZmeBGf',       // $679/month (billed annually)
+  'starter-monthly': 'price_starter_monthly_REPLACE_ME',  // $149/month
+  'growth-monthly': 'price_growth_monthly_REPLACE_ME',   // $399/month  
+  'pro-monthly': 'price_pro_monthly_REPLACE_ME',         // $799/month
+  'starter-annual': 'price_starter_annual_REPLACE_ME',   // $127/month (billed annually)
+  'growth-annual': 'price_growth_annual_REPLACE_ME',     // $339/month (billed annually)
+  'pro-annual': 'price_pro_annual_REPLACE_ME',           // $679/month (billed annually)
 };
 
 function priceIdFor(plan: string, cycle: string): string | null {
