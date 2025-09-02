@@ -1,5 +1,7 @@
-import { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import type { User } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import { 
   NavigationMenu,
@@ -9,14 +11,44 @@ import {
   NavigationMenuList,
   NavigationMenuTrigger,
 } from "@/components/ui/navigation-menu";
-import { Building, Menu, X, ChevronDown } from "lucide-react";
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
+import { Building, Menu, X, ChevronDown, User as UserIcon, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 import UsageMeter from "./UsageMeter";
 
 const Navigation = () => {
   console.log("Navigation component is rendering");
   const [isOpen, setIsOpen] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
   const location = useLocation();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+    });
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        setUser(session?.user ?? null);
+      }
+    );
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    navigate('/');
+  };
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -155,14 +187,38 @@ const Navigation = () => {
                 />
               </div>
               
-              <div className="flex items-center gap-3">
-                <Button variant="ghost" asChild>
-                  <Link to="/login">Log in</Link>
-                </Button>
-                <Button asChild>
-                  <Link to="/demo">Book a Demo</Link>
-                </Button>
-              </div>
+              {user ? (
+                <div className="flex items-center gap-3">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="sm" className="flex items-center gap-2">
+                        <UserIcon className="h-4 w-4" />
+                        {user.email}
+                        <ChevronDown className="h-3 w-3" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem asChild>
+                        <Link to="/app">Dashboard</Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={handleSignOut}>
+                        <LogOut className="h-4 w-4 mr-2" />
+                        Sign out
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              ) : (
+                <div className="flex items-center gap-3">
+                  <Button variant="ghost" asChild>
+                    <Link to="/login">Log in</Link>
+                  </Button>
+                  <Button asChild>
+                    <Link to="/demo">Book a Demo</Link>
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
 
@@ -243,14 +299,30 @@ const Navigation = () => {
                 </div>
               </div>
               <div className="px-3 pt-4 border-t">
-                <div className="space-y-2">
-                  <Button variant="ghost" asChild className="w-full justify-start">
-                    <Link to="/login" onClick={() => setIsOpen(false)}>Log in</Link>
-                  </Button>
-                  <Button asChild className="w-full">
-                    <Link to="/demo" onClick={() => setIsOpen(false)}>Book a Demo</Link>
-                  </Button>
-                </div>
+                {user ? (
+                  <div className="space-y-2">
+                    <div className="text-sm text-muted-foreground px-3">{user.email}</div>
+                    <Button variant="ghost" asChild className="w-full justify-start">
+                      <Link to="/app" onClick={() => setIsOpen(false)}>Dashboard</Link>
+                    </Button>
+                    <Button variant="ghost" onClick={() => {
+                      handleSignOut();
+                      setIsOpen(false);
+                    }} className="w-full justify-start">
+                      <LogOut className="h-4 w-4 mr-2" />
+                      Sign out
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <Button variant="ghost" asChild className="w-full justify-start">
+                      <Link to="/login" onClick={() => setIsOpen(false)}>Log in</Link>
+                    </Button>
+                    <Button asChild className="w-full">
+                      <Link to="/demo" onClick={() => setIsOpen(false)}>Book a Demo</Link>
+                    </Button>
+                  </div>
+                )}
               </div>
             </div>
           </div>
