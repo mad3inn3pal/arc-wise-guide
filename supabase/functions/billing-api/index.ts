@@ -67,9 +67,16 @@ serve(async (req) => {
       });
     }
 
-    const org_id = user.user_metadata?.org_id;
+    // Get the user's org_id from org_member table
+    const { data: orgMember } = await supabase
+      .from('org_member')
+      .select('org_id')
+      .eq('user_id', user.id)
+      .maybeSingle();
+    
+    const org_id = orgMember?.org_id;
     if (!org_id) {
-      return new Response(JSON.stringify({ error: 'Missing org_id' }), {
+      return new Response(JSON.stringify({ error: 'User not part of any organization' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
