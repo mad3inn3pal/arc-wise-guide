@@ -82,6 +82,7 @@ const Pricing = () => {
         // Paid plan - redirect to Stripe checkout
         await checkout({
           plan: confirmDialog.plan,
+          billing_cycle: 'monthly', // Default to monthly for now
           returnTo: returnTo || undefined,
         });
       }
