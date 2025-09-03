@@ -21,20 +21,18 @@ const PLAN_CONFIG = {
   pro:     { included: 600, overage_rate: 1.25, seat_limit: null },
 };
 
-// Stripe price mapping - REPLACE THESE WITH YOUR ACTUAL STRIPE PRICE IDS
-const STRIPE_PRICES = {
-  'starter-monthly': 'price_starter_monthly_REPLACE_ME',  // $149/month
-  'growth-monthly': 'price_growth_monthly_REPLACE_ME',   // $399/month  
-  'pro-monthly': 'price_pro_monthly_REPLACE_ME',         // $799/month
-  'starter-annual': 'price_starter_annual_REPLACE_ME',   // $127/month (billed annually)
-  'growth-annual': 'price_growth_annual_REPLACE_ME',     // $339/month (billed annually)
-  'pro-annual': 'price_pro_annual_REPLACE_ME',           // $679/month (billed annually)
+// Plan pricing configuration
+const PLAN_PRICING = {
+  starter: { monthly: 14900, annual: 12700 }, // $149/month, $127/month (billed annually)
+  growth: { monthly: 39900, annual: 33900 },  // $399/month, $339/month (billed annually)
+  pro: { monthly: 79900, annual: 67900 }      // $799/month, $679/month (billed annually)
 };
 
-function priceIdFor(plan: string, cycle: string): string | null {
+function getPriceAmount(plan: string, cycle: string): number | null {
   if (plan === 'free') return null;
-  const key = `${plan}-${cycle}` as keyof typeof STRIPE_PRICES;
-  return STRIPE_PRICES[key] || null;
+  const planPricing = PLAN_PRICING[plan as keyof typeof PLAN_PRICING];
+  if (!planPricing) return null;
+  return planPricing[cycle as keyof typeof planPricing] || null;
 }
 
 serve(async (req) => {
@@ -218,21 +216,31 @@ serve(async (req) => {
             .eq('id', org_id);
         }
         
-        // Get price ID
-        const priceId = priceIdFor(plan, billing_cycle);
-        if (!priceId) {
-          return new Response(JSON.stringify({ error: 'Price not found' }), {
+        // Get price amount
+        const priceAmount = getPriceAmount(plan, billing_cycle);
+        if (!priceAmount) {
+          return new Response(JSON.stringify({ error: 'Invalid plan or billing cycle' }), {
             status: 400,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           });
         }
         
-        // Create checkout session
+        // Create checkout session with dynamic pricing
         const origin = req.headers.get('origin') || 'http://localhost:5173';
         const session = await stripe.checkout.sessions.create({
           customer: customerId,
           line_items: [{
-            price: priceId,
+            price_data: {
+              currency: 'usd',
+              product_data: {
+                name: `${plan.charAt(0).toUpperCase() + plan.slice(1)} Plan`,
+                description: `${plan.charAt(0).toUpperCase() + plan.slice(1)} subscription - ${billing_cycle} billing`
+              },
+              unit_amount: priceAmount,
+              recurring: {
+                interval: billing_cycle === 'annual' ? 'year' : 'month'
+              }
+            },
             quantity: 1,
           }],
           mode: 'subscription',
