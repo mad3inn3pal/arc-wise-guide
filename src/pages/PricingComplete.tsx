@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Check, ArrowRight, Loader2 } from "lucide-react";
 import { useBilling } from "@/hooks/useBilling";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 const PricingComplete = () => {
   const [searchParams] = useSearchParams();
@@ -23,18 +24,33 @@ const PricingComplete = () => {
       return;
     }
 
-    // Show success toast
-    toast({
-      title: "Payment Successful!",
-      description: "Your plan has been upgraded successfully.",
-    });
+    const verifyPayment = async () => {
+      try {
+        const { data } = await supabase.functions.invoke('verify-payment', {
+          body: { session_id: sessionId }
+        });
 
-    // Simulate processing delay then mark as complete
-    const timer = setTimeout(() => {
-      setIsProcessing(false);
-    }, 2000);
+        if (data.success) {
+          toast({
+            title: "Payment Successful!",
+            description: `Your plan has been upgraded to ${data.plan}.`,
+          });
+        } else {
+          throw new Error('Payment verification failed');
+        }
+      } catch (error) {
+        console.error('Payment verification error:', error);
+        toast({
+          title: "Verification Error",
+          description: "There was an issue verifying your payment. Please contact support.",
+          variant: "destructive"
+        });
+      } finally {
+        setIsProcessing(false);
+      }
+    };
 
-    return () => clearTimeout(timer);
+    verifyPayment();
   }, [sessionId, navigate, toast]);
 
   const handleContinue = () => {
