@@ -100,7 +100,7 @@ const AppHeader = ({ user, orgName = "Your Organization", usage }: AppHeaderProp
                     <ChevronDown className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56 bg-popover">
+                <DropdownMenuContent align="end" className="w-56 bg-background border-2 border-border shadow-lg z-50">
                   <DropdownMenuItem>
                     <Building className="h-4 w-4 mr-2" />
                     {orgName}
@@ -132,7 +132,7 @@ const AppHeader = ({ user, orgName = "Your Organization", usage }: AppHeaderProp
                     </Badge>
                   </Button>
                 </SheetTrigger>
-                <SheetContent className="w-80 sm:w-96 bg-popover">
+                <SheetContent className="w-80 sm:w-96 bg-background border-2 border-border">
                   <SheetHeader>
                     <SheetTitle>Recent Activity</SheetTitle>
                   </SheetHeader>
@@ -151,7 +151,7 @@ const AppHeader = ({ user, orgName = "Your Organization", usage }: AppHeaderProp
                     <User className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56 bg-popover">
+                <DropdownMenuContent align="end" className="w-56 bg-background border-2 border-border shadow-lg z-50">
                   <DropdownMenuItem className="flex-col items-start">
                     <div className="font-medium">{user?.email}</div>
                     <div className="text-xs text-muted-foreground">Organization Admin</div>
@@ -181,7 +181,7 @@ const AppHeader = ({ user, orgName = "Your Organization", usage }: AppHeaderProp
 
       {/* Global Search Sheet */}
       <Sheet open={searchOpen} onOpenChange={setSearchOpen}>
-        <SheetContent side="top" className="h-96 bg-popover">
+        <SheetContent side="top" className="h-96 bg-background border-2 border-border">
           <SheetHeader>
             <SheetTitle>Global Search</SheetTitle>
           </SheetHeader>

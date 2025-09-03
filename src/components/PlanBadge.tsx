@@ -22,7 +22,7 @@ const PlanBadge = () => {
           <ChevronDown className="w-3 h-3 ml-1" />
         </Badge>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-48 bg-background border-2 border-muted z-50">
+      <DropdownMenuContent align="end" className="w-48 bg-background border-2 border-border shadow-lg z-50">
         <DropdownMenuItem asChild>
           <Link to="/pricing" className="flex items-center w-full">
             <Settings className="w-4 h-4 mr-2" />
