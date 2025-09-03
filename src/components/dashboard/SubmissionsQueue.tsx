@@ -257,7 +257,7 @@ const SubmissionsQueue = ({ submissions = [], isLoading, hasData = true }: Submi
                           <MoreHorizontal className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="bg-popover">
+                      <DropdownMenuContent align="end" className="bg-background border-2 border-border shadow-lg z-50">
                         <DropdownMenuItem>
                           <ExternalLink className="h-4 w-4 mr-2" />
                           Open Review
