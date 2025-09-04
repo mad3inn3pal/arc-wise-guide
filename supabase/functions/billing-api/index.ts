@@ -98,6 +98,15 @@ serve(async (req) => {
         const config = PLAN_CONFIG[currentPlan as keyof typeof PLAN_CONFIG] || PLAN_CONFIG.free;
         const features = PLAN_FEATURES[currentPlan as keyof typeof PLAN_FEATURES] || PLAN_FEATURES.free;
         
+        // Get submission usage for current month
+        const currentMonth = new Date().toISOString().slice(0, 7); // YYYY-MM format
+        const { data: usageData } = await supabase
+          .from('usage_counter')
+          .select('submissions_count')
+          .eq('org_id', org_id)
+          .eq('month_key', currentMonth)
+          .maybeSingle();
+        
         // Get seat usage
         const { count: seatCount } = await supabase
           .from('org_member')
@@ -113,8 +122,9 @@ serve(async (req) => {
           overage_rate: config.overage_rate,
           seats: {
             limit: config.seat_limit,
-            used: seatCount || 0
+            used: usageData?.submissions_count || 0
           },
+          seat_count: seatCount || 0,
           features
         }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },

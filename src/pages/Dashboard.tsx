@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Session, User } from "@supabase/supabase-js";
+import { useBilling } from "@/hooks/useBilling";
 import AppHeader from "@/components/dashboard/AppHeader";
 import KPIStrip from "@/components/dashboard/KPIStrip";
 import SubmissionsQueue from "@/components/dashboard/SubmissionsQueue";
@@ -61,14 +62,27 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
+  const { plan: billingPlan } = useBilling();
 
-  const usage = useMemo(() => ({
-    plan: user?.user_metadata?.selected_plan || 'free',
-    included: user?.user_metadata?.selected_plan === 'free' ? 3 : 25,
-    used: 0,
-    overage: 0,
-    overageRate: 5.0,
-  }), [user]);
+  const usage = useMemo(() => {
+    if (!billingPlan) {
+      return {
+        plan: 'free',
+        included: 4,
+        used: 0,
+        overage: 0,
+        overageRate: 999,
+      };
+    }
+    
+    return {
+      plan: billingPlan.plan,
+      included: billingPlan.included,
+      used: billingPlan.seats.used, // This is now submissions used, not seats
+      overage: Math.max(0, billingPlan.seats.used - billingPlan.included),
+      overageRate: billingPlan.overage_rate,
+    };
+  }, [billingPlan]);
 
   useEffect(() => {
     // Set up auth state listener

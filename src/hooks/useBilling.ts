@@ -114,6 +114,7 @@ export const useBilling = () => {
           title: "Plan Updated",
           description: `Successfully upgraded to ${data.plan}`,
         });
+        // Invalidate queries to refresh the data
         queryClient.invalidateQueries({ queryKey: ['billing-plan'] });
       }
     },

@@ -35,6 +35,8 @@ const PricingComplete = () => {
             title: "Payment Successful!",
             description: `Your plan has been upgraded to ${data.plan}.`,
           });
+          // Invalidate billing queries to refresh plan data
+          window.location.reload(); // Force refresh to get latest data
         } else {
           throw new Error('Payment verification failed');
         }
