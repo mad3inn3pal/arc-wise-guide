@@ -21,11 +21,11 @@ const PLAN_CONFIG = {
   pro:     { included: 600, overage_rate: 1.25, seat_limit: null },
 };
 
-// Plan pricing configuration
+// Plan pricing configuration - All $0 for testing
 const PLAN_PRICING = {
-  starter: { monthly: 14900, annual: 12700 }, // $149/month, $127/month (billed annually)
-  growth: { monthly: 39900, annual: 33900 },  // $399/month, $339/month (billed annually)
-  pro: { monthly: 79900, annual: 67900 }      // $799/month, $679/month (billed annually)
+  starter: { monthly: 0, annual: 0 }, // $0/month for testing
+  growth: { monthly: 0, annual: 0 },  // $0/month for testing
+  pro: { monthly: 0, annual: 0 }      // $0/month for testing
 };
 
 function getPriceAmount(plan: string, cycle: string): number | null {

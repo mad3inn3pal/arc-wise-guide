@@ -131,7 +131,7 @@ const Pricing = () => {
     },
     {
       name: "Starter",
-      price: "$149",
+      price: "$0",
       period: "/ community / mo",
       submissions: "60 submissions/mo",
       overage: "$3.00 per extra submission",
@@ -160,7 +160,7 @@ const Pricing = () => {
     },
     {
       name: "Growth", 
-      price: "$399",
+      price: "$0",
       period: "/ community / mo",
       submissions: "240 submissions/mo",
       overage: "$2.00 per extra submission",
@@ -186,8 +186,8 @@ const Pricing = () => {
     },
     {
       name: "Pro",
-      price: "$799",
-      period: "/ community / mo", 
+      price: "$0",
+      period: "/ community / mo",
       submissions: "600 submissions/mo",
       overage: "$1.25 per extra submission",
       features: [
