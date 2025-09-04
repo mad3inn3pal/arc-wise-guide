@@ -218,7 +218,7 @@ serve(async (req) => {
         
         // Get price amount
         const priceAmount = getPriceAmount(plan, billing_cycle);
-        if (!priceAmount) {
+        if (priceAmount === null) {
           return new Response(JSON.stringify({ error: 'Invalid plan or billing cycle' }), {
             status: 400,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
