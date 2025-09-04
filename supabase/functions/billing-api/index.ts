@@ -32,7 +32,8 @@ function getPriceAmount(plan: string, cycle: string): number | null {
   if (plan === 'free') return null;
   const planPricing = PLAN_PRICING[plan as keyof typeof PLAN_PRICING];
   if (!planPricing) return null;
-  return planPricing[cycle as keyof typeof planPricing] || null;
+  const price = planPricing[cycle as keyof typeof planPricing];
+  return price !== undefined ? price : null;
 }
 
 serve(async (req) => {
