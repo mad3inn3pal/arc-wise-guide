@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { useBilling } from "@/hooks/useBilling";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 
@@ -23,6 +24,7 @@ interface ChecklistItem {
 
 const OnboardingChecklist = () => {
   const { toast } = useToast();
+  const { plan: billingPlan } = useBilling();
   const [items, setItems] = useState<ChecklistItem[]>([
     {
       id: "community",
@@ -227,7 +229,8 @@ const OnboardingChecklist = () => {
           window.location.href = `/app/submissions/${submissions[0].id}?tab=letter`;
           break;
         case "invite":
-          if (userPlan === "free") {
+          // Check if user has invite feature access
+          if (!billingPlan?.features.INVITES) {
             // Redirect directly to pricing with return path
             window.location.href = '/pricing?from=invites&returnTo=/app?open=invites';
           } else {
@@ -380,14 +383,13 @@ const OnboardingChecklist = () => {
 
     const emails = inviteEmails.split(',').map(email => email.trim()).filter(Boolean);
     
-    // Check seat limits based on plan
-    const seatLimits = { starter: 2, growth: 5, pro: Infinity };
-    const currentLimit = seatLimits[userPlan as keyof typeof seatLimits] || 1;
+    // Check seat limits based on current billing plan
+    const currentLimit = billingPlan?.seats.limit || 1;
     
-    if (emails.length > currentLimit - 1) { // -1 for current user
+    if (currentLimit !== null && emails.length > currentLimit - 1) { // -1 for current user
       toast({
         title: "Seat limit exceeded",
-        description: `Your ${userPlan} plan allows ${currentLimit} total seats.`,
+        description: `Your ${billingPlan?.plan || 'current'} plan allows ${currentLimit} total seats.`,
         variant: "destructive",
       });
       return;
