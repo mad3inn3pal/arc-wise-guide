@@ -14,13 +14,12 @@ const PlanBadge = () => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Badge 
-          variant="secondary" 
-          className="cursor-pointer hover:bg-secondary/80 transition-colors px-3 py-1.5 text-sm bg-background border-2 border-muted z-50"
+        <button 
+          className="inline-flex items-center rounded-md border border-input bg-secondary px-3 py-1.5 text-sm font-semibold text-secondary-foreground shadow-sm cursor-pointer hover:bg-secondary/80 transition-colors border-2 border-muted z-50"
         >
           {plan.plan.charAt(0).toUpperCase() + plan.plan.slice(1)} · {plan.seats.used}/{plan.included}
           <ChevronDown className="w-3 h-3 ml-1" />
-        </Badge>
+        </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48 bg-background border-2 border-border shadow-lg z-50">
         <DropdownMenuItem asChild>
