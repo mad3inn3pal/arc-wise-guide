@@ -229,8 +229,11 @@ const OnboardingChecklist = () => {
           window.location.href = `/app/submissions/${submissions[0].id}?tab=letter`;
           break;
         case "invite":
-          // Check if user has invite feature access
-          if (!billingPlan?.features.INVITES) {
+          // Check if user has invite feature access based on plan
+          const planName = billingPlan?.plan || 'free';
+          const hasInviteAccess = planName !== 'free'; // All paid plans have invite access
+          
+          if (!hasInviteAccess) {
             // Redirect directly to pricing with return path
             window.location.href = '/pricing?from=invites&returnTo=/app?open=invites';
           } else {
@@ -383,8 +386,15 @@ const OnboardingChecklist = () => {
 
     const emails = inviteEmails.split(',').map(email => email.trim()).filter(Boolean);
     
-    // Check seat limits based on current billing plan
-    const currentLimit = billingPlan?.seats.limit || 1;
+    // Check seat limits based on current billing plan dynamically
+    const planName = billingPlan?.plan || 'free';
+    const seatLimits: { [key: string]: number | null } = {
+      free: 1,
+      starter: 2, 
+      growth: 5,
+      pro: null // unlimited
+    };
+    const currentLimit = seatLimits[planName] || 1;
     
     if (currentLimit !== null && emails.length > currentLimit - 1) { // -1 for current user
       toast({
