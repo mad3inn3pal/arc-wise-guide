@@ -20,6 +20,8 @@ serve(async (req) => {
   }
 
   try {
+    console.log('Starting payment verification...');
+    
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
@@ -27,6 +29,7 @@ serve(async (req) => {
 
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
+      console.log('No authorization header provided');
       return new Response(JSON.stringify({ error: 'No authorization header' }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -45,7 +48,10 @@ serve(async (req) => {
     }
 
     const { session_id } = await req.json();
+    console.log('Session ID received:', session_id);
+    
     if (!session_id) {
+      console.log('No session ID provided');
       return new Response(JSON.stringify({ error: 'Session ID required' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -65,8 +71,14 @@ serve(async (req) => {
     
     // Retrieve the checkout session
     const session = await stripe.checkout.sessions.retrieve(session_id);
+    console.log('Stripe session retrieved:', { 
+      payment_status: session.payment_status, 
+      metadata: session.metadata,
+      mode: session.mode 
+    });
     
     if (session.payment_status !== 'paid') {
+      console.log('Payment not completed, status:', session.payment_status);
       return new Response(JSON.stringify({ error: 'Payment not completed' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -75,9 +87,14 @@ serve(async (req) => {
 
     // Get subscription details from the session metadata
     const { org_id, plan, billing_cycle } = session.metadata || {};
+    console.log('Extracted metadata:', { org_id, plan, billing_cycle });
     
     if (!org_id || !plan || !billing_cycle) {
-      return new Response(JSON.stringify({ error: 'Invalid session metadata' }), {
+      console.log('Missing required metadata fields');
+      return new Response(JSON.stringify({ 
+        error: 'Invalid session metadata',
+        received_metadata: session.metadata 
+      }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
