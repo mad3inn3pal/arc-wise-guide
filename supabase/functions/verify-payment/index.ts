@@ -74,7 +74,7 @@ serve(async (req) => {
     }
 
     // Get subscription details from the session metadata
-    const { org_id, plan, billing_cycle } = session.subscription_data?.metadata || {};
+    const { org_id, plan, billing_cycle } = session.metadata || {};
     
     if (!org_id || !plan || !billing_cycle) {
       return new Response(JSON.stringify({ error: 'Invalid session metadata' }), {
