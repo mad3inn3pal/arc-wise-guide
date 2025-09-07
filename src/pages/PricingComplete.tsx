@@ -7,8 +7,10 @@ import { Check, ArrowRight, Loader2 } from "lucide-react";
 import { useBilling } from "@/hooks/useBilling";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { createLogger } from "@/utils/logger";
 
 const PricingComplete = () => {
+  const logger = createLogger('pricing-complete');
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -18,52 +20,103 @@ const PricingComplete = () => {
   const sessionId = searchParams.get('session_id');
   const returnTo = searchParams.get('returnTo');
 
+  logger.lifecycle('component-mounted', 'PricingComplete', {
+    sessionId,
+    returnTo,
+    hasCurrentPlan: !!currentPlan,
+    isLoading
+  });
+
   useEffect(() => {
+    logger.lifecycle('effect-start', 'payment-verification', { sessionId });
+    
     if (!sessionId) {
+      logger.warn('No session ID found, redirecting to pricing', { sessionId });
       navigate('/pricing');
       return;
     }
 
     const verifyPayment = async () => {
+      logger.info('Starting payment verification', { sessionId });
+      
       try {
-        const { data } = await supabase.functions.invoke('verify-payment', {
+        setIsProcessing(true);
+        logger.api('POST', 'verify-payment', { sessionId });
+        
+        const { data, error } = await supabase.functions.invoke('verify-payment', {
           body: { session_id: sessionId }
         });
 
-        if (data.success) {
+        if (error) {
+          logger.error('Supabase function invocation error', { error, sessionId });
+          throw error;
+        }
+
+        logger.info('Payment verification response received', { data, sessionId });
+
+        if (data?.success) {
+          logger.info('Payment verification successful', { 
+            plan: data.plan, 
+            billing_cycle: data.billing_cycle,
+            sessionId 
+          });
+          
           toast({
             title: "Payment Successful!",
             description: `Your plan has been upgraded to ${data.plan}.`,
           });
+          
+          logger.action('payment-verified-successfully', { 
+            plan: data.plan,
+            sessionId,
+            returnTo 
+          });
+          
           // Invalidate billing queries to refresh plan data
           window.location.reload(); // Force refresh to get latest data
         } else {
+          logger.error('Payment verification failed - success false', { 
+            data,
+            sessionId 
+          });
           throw new Error('Payment verification failed');
         }
-      } catch (error) {
-        console.error('Payment verification error:', error);
+      } catch (error: any) {
+        logger.error('Payment verification error', { 
+          error: error.message,
+          stack: error.stack,
+          sessionId,
+          errorType: error.constructor.name
+        });
+        
         toast({
           title: "Verification Error",
           description: "There was an issue verifying your payment. Please contact support.",
           variant: "destructive"
         });
       } finally {
+        logger.info('Payment verification process completed', { sessionId });
         setIsProcessing(false);
       }
     };
 
     verifyPayment();
-  }, [sessionId, navigate, toast]);
+  }, [sessionId, navigate, toast, logger]);
 
   const handleContinue = () => {
+    logger.action('continue-button-clicked', { returnTo });
+    
     if (returnTo) {
+      logger.info('Redirecting to returnTo URL', { returnTo });
       window.location.href = returnTo;
     } else {
+      logger.info('Navigating to dashboard');
       navigate('/app');
     }
   };
 
   if (isLoading || isProcessing) {
+    logger.debug('Showing loading state', { isLoading, isProcessing });
     return (
       <div className="min-h-screen bg-gradient-subtle flex items-center justify-center">
         <Card className="w-full max-w-md mx-4">
@@ -78,6 +131,11 @@ const PricingComplete = () => {
       </div>
     );
   }
+
+  logger.info('Rendering success state', { 
+    currentPlan: currentPlan?.plan,
+    billing_cycle: currentPlan?.billing_cycle 
+  });
 
   return (
     <div className="min-h-screen bg-gradient-subtle flex items-center justify-center">

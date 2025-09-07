@@ -37,61 +37,86 @@ function getPriceAmount(plan: string, cycle: string): number | null {
 }
 
 serve(async (req) => {
+  console.log(`[BILLING-API] ${req.method} request received from ${req.headers.get('origin') || 'unknown-origin'}`);
+  
   if (req.method === 'OPTIONS') {
+    console.log('[BILLING-API] Handling CORS preflight');
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
+    console.log('[BILLING-API] Initializing Supabase client');
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
     const authHeader = req.headers.get('Authorization');
+    console.log('[BILLING-API] Auth header present:', !!authHeader);
     if (!authHeader) {
+      console.log('[BILLING-API] ERROR: No authorization header provided');
       return new Response(JSON.stringify({ error: 'No authorization header' }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
+    console.log('[BILLING-API] Authenticating user');
     const { data: { user }, error: authError } = await supabase.auth.getUser(
       authHeader.replace('Bearer ', '')
     );
 
     if (authError || !user) {
+      console.log('[BILLING-API] ERROR: Authentication failed', { authError: authError?.message, hasUser: !!user });
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
+    console.log('[BILLING-API] User authenticated:', user.id);
+
     // Get the user's org_id from org_member table
-    const { data: orgMember } = await supabase
+    console.log('[BILLING-API] Fetching user organization membership');
+    const { data: orgMember, error: orgError } = await supabase
       .from('org_member')
       .select('org_id')
       .eq('user_id', user.id)
       .maybeSingle();
     
+    if (orgError) {
+      console.log('[BILLING-API] ERROR: Failed to fetch org membership', orgError);
+    }
+    
     const org_id = orgMember?.org_id;
+    console.log('[BILLING-API] Organization ID found:', org_id);
     if (!org_id) {
+      console.log('[BILLING-API] ERROR: User not part of any organization');
       return new Response(JSON.stringify({ error: 'User not part of any organization' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    const { action, plan, billing_cycle = 'monthly', returnTo } = await req.json();
+    const requestBody = await req.json();
+    const { action, plan, billing_cycle = 'monthly', returnTo } = requestBody;
+    console.log('[BILLING-API] Processing action:', action, { plan, billing_cycle, returnTo });
 
     switch (action) {
       case 'get-plan': {
-        const { data } = await supabase
+        console.log('[BILLING-API] GET-PLAN: Fetching plan data for org:', org_id);
+        const { data, error: planError } = await supabase
           .from('plan_subscription')
           .select('*')
           .eq('org_id', org_id)
           .maybeSingle();
 
+        if (planError) {
+          console.log('[BILLING-API] GET-PLAN ERROR: Failed to fetch plan subscription', planError);
+        }
+
         const currentPlan = data?.plan || 'free';
+        console.log('[BILLING-API] GET-PLAN: Current plan found:', currentPlan);
         const currentBillingCycle = data?.billing_cycle || 'monthly';
         const status = data?.status || 'active';
         
@@ -100,21 +125,48 @@ serve(async (req) => {
         
         // Get submission usage for current month
         const currentMonth = new Date().toISOString().slice(0, 7); // YYYY-MM format
-        const { data: usageData } = await supabase
+        console.log('[BILLING-API] GET-PLAN: Fetching usage for month:', currentMonth);
+        const { data: usageData, error: usageError } = await supabase
           .from('usage_counter')
           .select('submissions_count')
           .eq('org_id', org_id)
           .eq('month_key', currentMonth)
           .maybeSingle();
         
+        if (usageError) {
+          console.log('[BILLING-API] GET-PLAN ERROR: Failed to fetch usage data', usageError);
+        }
+        console.log('[BILLING-API] GET-PLAN: Usage data:', usageData?.submissions_count || 0);
+        
         // Get seat usage
-        const { count: seatCount } = await supabase
+        console.log('[BILLING-API] GET-PLAN: Fetching seat count');
+        const { count: seatCount, error: seatError } = await supabase
           .from('org_member')
           .select('*', { count: 'exact', head: true })
           .eq('org_id', org_id)
           .in('role', ['board', 'manager']);
         
-        return new Response(JSON.stringify({
+        if (seatError) {
+          console.log('[BILLING-API] GET-PLAN ERROR: Failed to fetch seat count', seatError);
+        }
+        console.log('[BILLING-API] GET-PLAN: Seat count:', seatCount || 0);
+        
+        const planResponse = {
+          plan: currentPlan,
+          billing_cycle: currentBillingCycle,
+          status,
+          included: config.included,
+          overage_rate: config.overage_rate,
+          seats: {
+            limit: config.seat_limit,
+            used: usageData?.submissions_count || 0
+          },
+          seat_count: seatCount || 0,
+          features
+        };
+        console.log('[BILLING-API] GET-PLAN: Returning plan data:', planResponse);
+        
+        return new Response(JSON.stringify(planResponse), {
           plan: currentPlan,
           billing_cycle: currentBillingCycle,
           status,
@@ -368,7 +420,12 @@ serve(async (req) => {
         });
     }
   } catch (error: any) {
-    console.error('Billing API error:', error);
+    console.error('[BILLING-API] FATAL ERROR:', {
+      message: error.message,
+      stack: error.stack,
+      name: error.name,
+      cause: error.cause
+    });
     return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

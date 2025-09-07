@@ -8,6 +8,9 @@ import AppHeader from "@/components/dashboard/AppHeader";
 import KPIStrip from "@/components/dashboard/KPIStrip";
 import SubmissionsQueue from "@/components/dashboard/SubmissionsQueue";
 import SidePanels from "@/components/dashboard/SidePanels";
+import { createLogger } from "@/utils/logger";
+import { usePageLogger } from "@/hooks/usePageLogger";
+import { PerformanceMonitor } from "@/utils/performance";
 
 interface KPIData {
   medianCycleDays: number;
@@ -53,6 +56,9 @@ interface Submission {
 }
 
 const Dashboard = () => {
+  const logger = createLogger('dashboard');
+  usePageLogger('dashboard');
+  
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -63,6 +69,8 @@ const Dashboard = () => {
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
   const { plan: billingPlan } = useBilling();
+
+  logger.lifecycle('dashboard-component-initialized');
 
   const usage = useMemo(() => {
     if (!billingPlan) {
