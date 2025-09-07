@@ -167,18 +167,6 @@ serve(async (req) => {
         console.log('[BILLING-API] GET-PLAN: Returning plan data:', planResponse);
         
         return new Response(JSON.stringify(planResponse), {
-          plan: currentPlan,
-          billing_cycle: currentBillingCycle,
-          status,
-          included: config.included,
-          overage_rate: config.overage_rate,
-          seats: {
-            limit: config.seat_limit,
-            used: usageData?.submissions_count || 0
-          },
-          seat_count: seatCount || 0,
-          features
-        }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
