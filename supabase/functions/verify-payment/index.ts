@@ -48,10 +48,10 @@ serve(async (req) => {
     }
 
     const { session_id } = await req.json();
-    console.log('Session ID received:', session_id);
+    console.log(`[VERIFY-PAYMENT] Session ID received: ${session_id}`);
     
     if (!session_id) {
-      console.log('No session ID provided');
+      console.log('[VERIFY-PAYMENT] No session ID provided');
       return new Response(JSON.stringify({ error: 'Session ID required' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -69,31 +69,45 @@ serve(async (req) => {
     
     const stripe = new Stripe(stripeKey, { apiVersion: '2023-10-16' });
     
-    // Retrieve the checkout session
-    const session = await stripe.checkout.sessions.retrieve(session_id);
-    console.log('Stripe session retrieved:', { 
+    // Add a small delay to prevent rate limiting
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    // Retrieve the checkout session with subscription expanded
+    console.log('[VERIFY-PAYMENT] Retrieving Stripe session...');
+    const session = await stripe.checkout.sessions.retrieve(session_id, {
+      expand: ['subscription']
+    });
+    
+    console.log('[VERIFY-PAYMENT] Stripe session retrieved:', { 
       payment_status: session.payment_status, 
       metadata: session.metadata,
+      subscription_metadata: session.subscription?.metadata,
       mode: session.mode 
     });
     
     if (session.payment_status !== 'paid') {
-      console.log('Payment not completed, status:', session.payment_status);
+      console.log('[VERIFY-PAYMENT] Payment not completed, status:', session.payment_status);
       return new Response(JSON.stringify({ error: 'Payment not completed' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    // Get subscription details from the session metadata
-    const { org_id, plan, billing_cycle } = session.metadata || {};
-    console.log('Extracted metadata:', { org_id, plan, billing_cycle });
+    // Extract metadata from session first, then subscription as fallback
+    const metadata = {
+      org_id: session.metadata?.org_id || session.subscription?.metadata?.org_id,
+      plan: session.metadata?.plan || session.subscription?.metadata?.plan,
+      billing_cycle: session.metadata?.billing_cycle || session.subscription?.metadata?.billing_cycle
+    };
     
-    if (!org_id || !plan || !billing_cycle) {
-      console.log('Missing required metadata fields');
+    console.log('[VERIFY-PAYMENT] Extracted metadata:', metadata);
+    
+    if (!metadata.org_id || !metadata.plan || !metadata.billing_cycle) {
+      console.log('[VERIFY-PAYMENT] Missing required metadata fields');
       return new Response(JSON.stringify({ 
         error: 'Invalid session metadata',
-        received_metadata: session.metadata 
+        received_session_metadata: session.metadata,
+        received_subscription_metadata: session.subscription?.metadata
       }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -104,7 +118,7 @@ serve(async (req) => {
     const { data: orgMember } = await supabase
       .from('org_member')
       .select('user_id')
-      .eq('org_id', org_id)
+      .eq('org_id', metadata.org_id)
       .eq('user_id', user.id)
       .maybeSingle();
     
@@ -115,15 +129,15 @@ serve(async (req) => {
       });
     }
 
-    const config = PLAN_CONFIG[plan as keyof typeof PLAN_CONFIG];
+    const config = PLAN_CONFIG[metadata.plan as keyof typeof PLAN_CONFIG];
     
     // Update or insert plan subscription
     const { error } = await supabase
       .from('plan_subscription')
       .upsert({
-        org_id,
-        plan,
-        billing_cycle,
+        org_id: metadata.org_id,
+        plan: metadata.plan,
+        billing_cycle: metadata.billing_cycle,
         status: 'active',
         submissions_included: config.included,
         overage_rate: config.overage_rate,
@@ -131,27 +145,31 @@ serve(async (req) => {
       });
     
     if (error) {
-      console.error('Database error:', error);
+      console.error('[VERIFY-PAYMENT] Database error:', error);
       return new Response(JSON.stringify({ error: 'Failed to update subscription' }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
     
+    console.log('[VERIFY-PAYMENT] Successfully updated plan subscription');
+    
     // Create audit log
     await supabase.from('audit_event').insert({
-      org_id,
+      org_id: metadata.org_id,
       actor_id: user.id,
       entity: 'plan_subscription',
       action: 'upgrade_via_stripe',
-      entity_id: org_id,
-      hash: JSON.stringify({ plan, billing_cycle, session_id })
+      entity_id: metadata.org_id,
+      hash: JSON.stringify({ plan: metadata.plan, billing_cycle: metadata.billing_cycle, session_id })
     });
+
+    console.log('[VERIFY-PAYMENT] Payment verification completed successfully');
 
     return new Response(JSON.stringify({
       success: true,
-      plan,
-      billing_cycle
+      plan: metadata.plan,
+      billing_cycle: metadata.billing_cycle
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

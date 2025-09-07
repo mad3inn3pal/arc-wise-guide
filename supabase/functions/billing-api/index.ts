@@ -297,6 +297,11 @@ serve(async (req) => {
           mode: 'subscription',
           success_url: `${origin}/pricing/complete?session_id={CHECKOUT_SESSION_ID}&returnTo=${encodeURIComponent(returnTo || '/pricing')}`,
           cancel_url: `${origin}/pricing?cancelled=true`,
+          metadata: { 
+            org_id, 
+            plan, 
+            billing_cycle 
+          },
           subscription_data: {
             metadata: { 
               org_id, 
