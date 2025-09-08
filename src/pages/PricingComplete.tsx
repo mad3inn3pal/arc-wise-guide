@@ -72,8 +72,13 @@ const PricingComplete = () => {
             returnTo 
           });
           
-          // Invalidate billing queries to refresh plan data
-          window.location.reload(); // Force refresh to get latest data
+          // Clear URL parameters and stop processing
+          const url = new URL(window.location.href);
+          url.searchParams.delete('session_id');
+          window.history.replaceState({}, '', url.toString());
+          
+          setIsProcessing(false);
+          return; // Exit early to show success state
         } else {
           logger.error('Payment verification failed - success false', { 
             data,
